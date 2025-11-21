@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 // Connect to MongoDB
-const uri = "mongodb+srv://radleyacha00_db_user:bw9vy6xUG3iSBbKb@attendnet-cluster.xxrf6qc.mongodb.net/?appName=attendnet-cluster";
+const uri = "mongodb+srv://radleyacha00_db_user:bw9vy6xUG3iSBbKb@attendnet-cluster.xxrf6qc.mongodb.net/AttendNetDB?appName=attendnet-cluster";
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
@@ -19,3 +19,11 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
+
+// Import user routes
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
+
+// Import session routes
+const sessionRoutes = require('./routes/sessionRoutes');
+app.use('/api/sessions', sessionRoutes);
