@@ -27,3 +27,7 @@ app.use('/api/users', userRoutes);
 // Import session routes
 const sessionRoutes = require('./routes/sessionRoutes');
 app.use('/api/sessions', sessionRoutes);
+
+// Import attendance routes
+const attendanceRoutes = require('./routes/attendanceRoutes');
+app.use('/api/attendance', attendanceRoutes);
