@@ -45,7 +45,6 @@ const scanAttendance = async (req, res) => {
     // return the populated attendance records as the results
     results = enriched;
     res.status(201).json({ message: "Attendance scan Complete.", results });
-    
   } catch (err) {
     console.error("Error scanning attendance:", err);
     res
