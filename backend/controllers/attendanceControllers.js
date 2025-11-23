@@ -21,6 +21,7 @@ const scanAttendance = async (req, res) => {
       department: { $in: session.departments },
     });
     let results = [];
+    const savedIds = [];
 
     for (let student of students) {
       const status = connectedMacs.includes(student.macAddress)
@@ -34,13 +35,23 @@ const scanAttendance = async (req, res) => {
         status: status.toLowerCase(),
         timestamp: new Date(),
       });
-      await record.save();
+      const saved = await record.save();
+      savedIds.push(saved._id);
+      console.log('Saved attendance id:', saved._id.toString());
     }
 
-    // Populate student/session details for all attendance records for this session
-    const enriched = await Attendance.find({ sessionId: session._id })
-      .populate("studentId", "name email department")
-      .populate("sessionId", "course date startTime endTime");
+    // Debug: how many attendance docs exist for this session in DB
+    const totalForSession = await Attendance.countDocuments({ sessionId: session._id });
+    console.log('Total attendance documents for session:', totalForSession);
+    console.log('Saved IDs length:', savedIds.length);
+
+    // Populate student/session details for the saved attendance records only
+    let enriched = [];
+    if (savedIds.length > 0) {
+      enriched = await Attendance.find({ _id: { $in: savedIds } })
+        .populate("studentId", "name email department")
+        .populate("sessionId", "course date startTime endTime");
+    }
 
     // return the populated attendance records as the results
     results = enriched;

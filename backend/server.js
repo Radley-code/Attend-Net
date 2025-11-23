@@ -1,8 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
+
 
 const app = express();
 app.use(express.json());
+
+app.use(cors());
 
 // Connect to MongoDB
 const uri = "mongodb+srv://radleyacha00_db_user:bw9vy6xUG3iSBbKb@attendnet-cluster.xxrf6qc.mongodb.net/AttendNetDB?appName=attendnet-cluster";
