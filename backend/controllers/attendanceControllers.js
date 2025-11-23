@@ -37,13 +37,15 @@ const scanAttendance = async (req, res) => {
       });
       const saved = await record.save();
       savedIds.push(saved._id);
-      console.log('Saved attendance id:', saved._id.toString());
+      console.log("Saved attendance id:", saved._id.toString());
     }
 
     // Debug: how many attendance docs exist for this session in DB
-    const totalForSession = await Attendance.countDocuments({ sessionId: session._id });
-    console.log('Total attendance documents for session:', totalForSession);
-    console.log('Saved IDs length:', savedIds.length);
+    const totalForSession = await Attendance.countDocuments({
+      sessionId: session._id,
+    });
+    console.log("Total attendance documents for session:", totalForSession);
+    console.log("Saved IDs length:", savedIds.length);
 
     // Populate student/session details for the saved attendance records only
     let enriched = [];
@@ -55,7 +57,40 @@ const scanAttendance = async (req, res) => {
 
     // return the populated attendance records as the results
     results = enriched;
-    res.status(201).json({ message: "Attendance scan Complete.", results });
+
+    // Normalize and categorize results for frontend convenience
+    const present = results
+      .filter((r) => r.status === "present")
+      .map((r) => ({
+        id: r._id,
+        studentId: r.studentId._id,
+        name: r.studentId.name,
+        department: r.studentId.department,
+        status: "Present",
+        timestamp: r.timestamp,
+      }));
+
+    const absent = results
+      .filter((r) => r.status === "absent")
+      .map((r) => ({
+        id: r._id,
+        studentId: r.studentId._id,
+        name: r.studentId.name,
+        department: r.studentId.department,
+        status: "Absent",
+        timestamp: r.timestamp,
+      }));
+
+    return res.status(201).json({
+      message: "Attendance scan complete.",
+      counts: {
+        total: results.length,
+        present: present.length,
+        absent: absent.length,
+      },
+      present,
+      absent,
+    });
   } catch (err) {
     console.error("Error scanning attendance:", err);
     res
@@ -65,3 +100,23 @@ const scanAttendance = async (req, res) => {
 };
 
 module.exports = { scanAttendance };
+
+// Debug: return all attendance records for a session (populated)
+const debugAttendanceForSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId)
+      return res.status(400).json({ message: "sessionId required" });
+    const docs = await Attendance.find({ sessionId })
+      .populate("studentId", "name email department macAddress")
+      .populate("sessionId", "course date startTime endTime");
+    return res.status(200).json({ message: "Attendance docs fetched", docs });
+  } catch (err) {
+    console.error("Error in debugAttendanceForSession:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error fetching attendance docs" });
+  }
+};
+
+module.exports = { scanAttendance, debugAttendanceForSession };
