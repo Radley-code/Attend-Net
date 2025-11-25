@@ -1,7 +1,7 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
@@ -9,29 +9,37 @@ app.use(express.json());
 app.use(cors());
 
 // Connect to MongoDB
-const uri = "mongodb+srv://radleyacha00_db_user:bw9vy6xUG3iSBbKb@attendnet-cluster.xxrf6qc.mongodb.net/AttendNetDB?appName=attendnet-cluster";
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/AttendNetDB";
 
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error("Connection error:", err));
+mongoose
+  .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("Connection error:", err));
 
-    //Simple test route
-app.get('/', (req, res) => {
-    res.send('AttendNet Server is running');
+// Simple test route
+app.get("/", (req, res) => {
+  res.send("AttendNet Server is running");
 });
 
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
 // Import user routes
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/users', userRoutes);
+const userRoutes = require("./routes/userRoutes");
+app.use("/api/users", userRoutes);
 
 // Import session routes
-const sessionRoutes = require('./routes/sessionRoutes');
-app.use('/api/sessions', sessionRoutes);
+const sessionRoutes = require("./routes/sessionRoutes");
+app.use("/api/sessions", sessionRoutes);
 
 // Import attendance routes
-const attendanceRoutes = require('./routes/attendanceRoutes');
-app.use('/api/attendance', attendanceRoutes);
+const attendanceRoutes = require("./routes/attendanceRoutes");
+app.use("/api/attendance", attendanceRoutes);
+
+// Import login/coordinator routes
+const loginRoutes = require("./routes/loginRoutes");
+app.use("/api/coordinator", loginRoutes);
+
+module.exports = app;
