@@ -31,6 +31,13 @@ document.getElementById("scanForm").addEventListener("submit", async (e) => {
   const resultsContainer = document.getElementById("resultsContainer");
   const submitBtn = document.querySelector('#scanForm button[type="submit"]');
 
+    if( macs.length === 0 || sessionId.length === 0 ) {
+        
+    resultsContainer.innerHTML = "<p>Please provide session ID and MAC addresses.</p>";
+    return;
+  }
+    
+
   try {
     submitBtn && (submitBtn.disabled = true);
     resultsContainer.innerHTML = "<p>Scanning attendance...</p>";
@@ -65,7 +72,8 @@ document.getElementById("scanForm").addEventListener("submit", async (e) => {
       absentArr
         .map(
           (a) => `
-      <div class="border p-2 mb-2">
+      <div class="borde
+    return;r p-2 mb-2">
         <strong>${a.name}</strong> (${a.department}) — <span class="text-danger">${a.status}</span>
       </div>
     `

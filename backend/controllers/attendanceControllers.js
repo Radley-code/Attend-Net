@@ -16,28 +16,50 @@ const scanAttendance = async (req, res) => {
       return res.status(404).json({ message: "Session not found" });
     }
 
-    //Get all students in the departments for this session
-    const students = await User.find({
-      department: { $in: session.departments },
-    });
+    // Get departments normalized and try a robust lookup for students
+    const sessionDepts = Array.isArray(session.departments)
+      ? session.departments.map((d) => (d || "").trim()).filter(Boolean)
+      : [];
+
+    // first try exact-match query
+    let students = [];
+    if (sessionDepts.length > 0) {
+      students = await User.find({ department: { $in: sessionDepts } });
+    }
+
+    // if no students found, try a case-insensitive match using regexes
+    if ((!students || students.length === 0) && sessionDepts.length > 0) {
+      const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const deptRegexes = sessionDepts.map(
+        (d) => new RegExp(`^${escapeRegExp(d)}$`, "i")
+      );
+      students = await User.find({ department: { $in: deptRegexes } });
+    }
     let results = [];
     const savedIds = [];
 
     for (let student of students) {
-      const status = connectedMacs.includes(student.macAddress)
-        ? "Present"
-        : "Absent";
-      //Record attendance
-      const record = new Attendance({
-        studentId: student._id,
-        sessionId: session._id,
-        department: student.department,
-        status: status.toLowerCase(),
-        timestamp: new Date(),
-      });
-      const saved = await record.save();
+      const studentMac = (student.macAddress || "").trim().toLowerCase();
+      const isPresent = connectedMacs.includes(studentMac);
+      const status = isPresent ? "Present" : "Absent";
+
+      // Upsert attendance so repeated scans update existing records instead of creating duplicates
+      const saved = await Attendance.findOneAndUpdate(
+        { studentId: student._id, sessionId: session._id },
+        {
+          department: student.department,
+          status: status.toLowerCase(),
+          timestamp: new Date(),
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
       savedIds.push(saved._id);
-      console.log("Saved attendance id:", saved._id.toString());
+      console.log(
+        "Saved/updated attendance id:",
+        saved._id.toString(),
+        "status:",
+        saved.status
+      );
     }
 
     // Debug: how many attendance docs exist for this session in DB
