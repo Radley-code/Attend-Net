@@ -11,6 +11,17 @@ const scanAttendance = async (req, res) => {
     let connectedMacs = req.body.connectedMacs;
     if (!Array.isArray(connectedMacs)) connectedMacs = [];
 
+    // Normalize MAC addresses for robust comparison: remove separators and lowercase
+    const normalizeMac = (m) =>
+      (m || "")
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-f0-9]/gi, "");
+    const normalizedConnectedSet = new Set(
+      connectedMacs.map((m) => normalizeMac(m))
+    );
+
     const session = await Session.findById(sessionId);
     if (!session) {
       return res.status(404).json({ message: "Session not found" });
@@ -39,9 +50,13 @@ const scanAttendance = async (req, res) => {
     const savedIds = [];
 
     for (let student of students) {
-      const studentMac = (student.macAddress || "").trim().toLowerCase();
-      const isPresent = connectedMacs.includes(studentMac);
+      const studentMacNormalized = normalizeMac(student.macAddress);
+      const isPresent = normalizedConnectedSet.has(studentMacNormalized);
       const status = isPresent ? "Present" : "Absent";
+
+      console.log(
+        `Checking student ${student.name} mac: ${student.macAddress} normalized: ${studentMacNormalized} present: ${isPresent}`
+      );
 
       // Upsert attendance so repeated scans update existing records instead of creating duplicates
       const saved = await Attendance.findOneAndUpdate(
