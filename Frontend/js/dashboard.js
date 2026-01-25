@@ -1,15 +1,23 @@
 // Helper functions for localStorage
+function getCoordinatorId() {
+  return localStorage.getItem("coordinatorId") || "default";
+}
+
+function getAttendanceKey() {
+  return `attendanceResults_${getCoordinatorId()}`;
+}
+
 function saveAttendanceResults(results) {
-  localStorage.setItem("attendanceResults", JSON.stringify(results));
+  localStorage.setItem(getAttendanceKey(), JSON.stringify(results));
 }
 
 function loadAttendanceResults() {
-  const saved = localStorage.getItem("attendanceResults");
+  const saved = localStorage.getItem(getAttendanceKey());
   return saved ? JSON.parse(saved) : null;
 }
 
 function clearAttendanceResults() {
-  localStorage.removeItem("attendanceResults");
+  localStorage.removeItem(getAttendanceKey());
 }
 
 // Load and display saved results on page load
@@ -34,7 +42,7 @@ function renderResults(presentArr, absentArr, counts) {
     <div class="border p-2 mb-2">
       <strong>${p.name}</strong> (${p.department}) — <span class="text-success">${p.status}</span>
     </div>
-  `
+  `,
       )
       .join("") || "<div>No present students</div>";
 
@@ -45,7 +53,7 @@ function renderResults(presentArr, absentArr, counts) {
     <div class="border p-2 mb-2">
       <strong>${a.name}</strong> (${a.department}) — <span class="text-danger">${a.status}</span>
     </div>
-  `
+  `,
       )
       .join("") || "<div>No absent students</div>";
 

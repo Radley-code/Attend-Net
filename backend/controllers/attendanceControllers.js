@@ -53,7 +53,7 @@ const scanAttendance = async (req, res) => {
       const studentMacNormalized = normalizeMac(student.macAddress);
       const isPresent = normalizedConnectedSet.has(studentMacNormalized);
       const status = isPresent ? "Present" : "Absent";
-
+ //console log for debugging error had when checking for students present
       console.log(
         `Checking student ${student.name} mac: ${student.macAddress} normalized: ${studentMacNormalized} present: ${isPresent}`
       );

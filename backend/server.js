@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(cors());
 
 // Connect to MongoDB
-const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/AttendNetDB";
+const uri = process.env.MONGODB_URI;
 
 mongoose
   .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
