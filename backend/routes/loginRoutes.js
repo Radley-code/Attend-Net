@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Coordinator = require("../models/coordinator");
+const auth = require("../middleware/auth");
 
 // Login endpoint
 router.post("/login", async (req, res) => {
@@ -25,7 +26,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: coordinator._id, role: coordinator.role },
       process.env.JWT_SECRET || "your-secret-key",
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     return res.status(200).json({ message: "Login successful", token });
@@ -61,22 +62,53 @@ router.post("/create", async (req, res) => {
     });
 
     await coordinator.save();
-    return res
-      .status(201)
-      .json({
-        message: "Coordinator created successfully",
-        coordinator: {
-          id: coordinator._id,
-          name,
-          email,
-          role: coordinator.role,
-        },
-      });
+    return res.status(201).json({
+      message: "Coordinator created successfully",
+      coordinator: {
+        id: coordinator._id,
+        name,
+        email,
+        role: coordinator.role,
+      },
+    });
   } catch (err) {
     console.error("Create coordinator error:", err);
     return res
       .status(500)
       .json({ message: "Server error creating coordinator" });
+  }
+});
+
+// Get coordinator profile endpoint (must come BEFORE /:id route)
+router.get("/me", auth, async (req, res) => {
+  try {
+    const coordinatorData = await Coordinator.findById(req.user.id).select("name email");
+    if (!coordinatorData) {
+      return res.status(404).json({ message: "Coordinator not found" });
+    }
+    return res.status(200).json(coordinatorData);
+  } catch (err) {
+    console.error("Get coordinator profile error:", err);
+    return res.status(500).json({ message: "Error fetching coordinator profile" });
+  }
+});
+
+// Get coordinator by ID endpoint
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const coordinator = await Coordinator.findById(id).select("-password");
+
+    if (!coordinator) {
+      return res.status(404).json({ message: "Coordinator not found" });
+    }
+
+    return res.status(200).json(coordinator);
+  } catch (err) {
+    console.error("Get coordinator error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error fetching coordinator" });
   }
 });
 

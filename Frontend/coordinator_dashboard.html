@@ -2,75 +2,309 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AttendNet Coordinator Dashboard</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/dashboard-styles.css" />
   </head>
   <body>
-    <div class="container mt-5">
-      <h1 class="text-center mb-4">AttendNet Coordinator Dashboard</h1>
+    <!-- Navbar -->
+    <div class="navbar-custom">
+      <div class="navbar-left">
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="navbar-tabs" id="navbarTabs">
+          <a href="#" class="nav-link active" data-tab="reports">
+            <i class="fas fa-chart-bar"></i> <span>Reports</span>
+          </a>
+          <a href="#" class="nav-link" data-tab="sessions">
+            <i class="fas fa-calendar"></i> <span>Sessions</span>
+          </a>
+          <a href="#" class="nav-link" data-tab="settings">
+            <i class="fas fa-cog"></i> <span>Settings</span>
+          </a>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <div class="coordinator-info">
+          <div class="coordinator-profile">
+            <div class="profile-avatar" id="profileAvatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="coordinator-details">
+              <div class="coordinator-name" id="coordNameDisplay">
+                Coordinator
+              </div>
+              <div class="coordinator-email" id="coordEmailDisplay">
+                email@example.com
+              </div>
+            </div>
+          </div>
+        </div>
+        <button
+          class="profile-menu-btn"
+          id="profileMenuBtn"
+          aria-label="Profile"
+        >
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
 
-      <!-- Session Creation Form -->
-      <div class="card mb-4">
-        <div class="card-header">Create Session</div>
-        <div class="card-body">
-          <form id="sessionForm">
-            <input
-              type="text"
-              class="form-control mb-2"
-              placeholder="Course"
-              id="course"
-            />
-            <input type="date" class="form-control mb-2" id="date" />
-            <input type="time" class="form-control mb-2" id="startTime" />
-            <input type="time" class="form-control mb-2" id="endTime" />
-            <input
-              type="text"
-              class="form-control mb-2"
-              placeholder="Departments (comma-separated)"
-              id="departments"
-            />
-            <button type="submit" class="btn btn-primary">
-              Create Session
+      <!-- Profile Dropdown Menu -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="#" class="dropdown-item" id="settingsLink" data-tab="settings">
+          <i class="fas fa-cog"></i> Settings
+        </a>
+        <a href="#" class="dropdown-item" id="logoutLink">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+      </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content active">
+          <div class="page-title">Attendance Report</div>
+          <div class="page-subtitle">
+            Detailed overview of student attendance records, filters, and
+            actions.
+          </div>
+
+          <!-- Statistics Cards -->
+          <div class="stats-container">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="stat-value" id="totalStudents">0</div>
+              <div class="stat-label">Total Students</div>
+              <div class="stat-sublabel">Registered in the system</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="color: #28a745">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="stat-value" id="totalPresent">0</div>
+              <div class="stat-label">Total Present</div>
+              <div class="stat-sublabel">Students marked present</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="color: #dc3545">
+                <i class="fas fa-times-circle"></i>
+              </div>
+              <div class="stat-value" id="totalAbsent">0</div>
+              <div class="stat-label">Total Absent</div>
+              <div class="stat-sublabel">Students had had absent</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="color: #ffc107">
+                <i class="fas fa-percent"></i>
+              </div>
+              <div class="stat-value" id="attendanceRate">0%</div>
+              <div class="stat-label">Attendance Rate</div>
+              <div class="stat-sublabel">Average for selected period</div>
+            </div>
+          </div>
+
+          <!-- Filter Section -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <i class="fas fa-filter"></i> Filter Attendance
+            </div>
+            <div class="filter-row">
+              <div class="filter-group">
+                <label for="filterDate">Date</label>
+                <input type="date" id="filterDate" />
+              </div>
+              <div class="filter-group">
+                <label for="filterCourse">Course</label>
+                <select id="filterCourse">
+                  <option value="">All Courses</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="filterSession">Session</label>
+                <select id="filterSession">
+                  <option value="">All Sessions</option>
+                </select>
+              </div>
+            </div>
+            <div class="filter-buttons">
+              <button
+                class="btn-custom btn-primary-custom"
+                id="previewEmailBtn"
+              >
+                <i class="fas fa-eye"></i> Preview Email
+              </button>
+              <button class="btn-custom btn-secondary-custom" id="exportPdfBtn">
+                <i class="fas fa-file-pdf"></i> Export PDF
+              </button>
+              <button class="btn-custom btn-primary-custom" id="sendEmailBtn">
+                <i class="fas fa-paper-plane"></i> Send Email
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Section -->
+          <div class="table-section">
+            <div class="table-title">
+              <i class="fas fa-table"></i> Detailed Attendance Records
+            </div>
+            <div class="table-subtitle">
+              View and manage individual student attendance.
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student Name</th>
+                    <th>Student ID</th>
+                    <th>Course</th>
+                    <th>Session</th>
+                    <th>Status</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: #999">
+                      No attendance records found
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination-custom">
+              <button class="pagination-btn" id="prevBtn">
+                <i class="fas fa-chevron-left"></i> Previous
+              </button>
+              <span id="pageInfo">Page 1</span>
+              <button class="pagination-btn" id="nextBtn">
+                Next <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sessions Tab -->
+        <div id="sessions" class="tab-content">
+          <div class="page-title">Create Session</div>
+          <div class="page-subtitle">Set up a new attendance session</div>
+
+          <div class="session-form">
+            <form id="sessionForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="course">Course Name</label>
+                  <input
+                    type="text"
+                    id="course"
+                    placeholder="e.g., Mathematics I"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="date">Date</label>
+                  <input type="date" id="date" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="startTime">Start Time</label>
+                  <input type="time" id="startTime" required />
+                </div>
+                <div class="form-group">
+                  <label for="endTime">End Time</label>
+                  <input type="time" id="endTime" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="departments">Departments (comma-separated)</label>
+                <input
+                  type="text"
+                  id="departments"
+                  placeholder="e.g., CS, EE, ME"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn-custom btn-primary-custom">
+                <i class="fas fa-plus"></i> Create Session
+              </button>
+            </form>
+          </div>
+
+          <!-- Attendance Scan Section -->
+          <div class="session-form">
+            <div class="page-title">Trigger Attendance Scan</div>
+            <form id="scanForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="sessionId">Session ID</label>
+                  <input
+                    type="text"
+                    id="sessionId"
+                    placeholder="Enter session ID"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="macs">Connected MACs (comma-separated)</label>
+                  <input
+                    type="text"
+                    id="macs"
+                    placeholder="e.g., AA:BB:CC:DD:EE:FF"
+                    required
+                  />
+                </div>
+              </div>
+              <button type="submit" class="btn-custom btn-primary-custom">
+                <i class="fas fa-wifi"></i> Scan Attendance
+              </button>
+            </form>
+            <div id="resultsContainer"></div>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+          <div class="page-title">Settings</div>
+          <div class="page-subtitle">Manage your account and preferences</div>
+          <div class="session-form">
+            <div class="form-group">
+              <label>Account Information</label>
+              <p style="color: #666">
+                Coordinator ID: <span id="coordId">-</span>
+              </p>
+              <p style="color: #666">Email: <span id="coordEmail">-</span></p>
+            </div>
+            <button class="btn-custom btn-secondary-custom" id="logoutBtn">
+              <i class="fas fa-sign-out-alt"></i> Logout
             </button>
-          </form>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Attendance Scan Trigger -->
-      <div class="card mb-4">
-        <div class="card-header">Trigger Attendance Scan</div>
-        <div class="card-body">
-          <form id="scanForm">
-            <input
-              type="text"
-              class="form-control mb-2"
-              placeholder="Session ID"
-              id="sessionId"
-            />
-            <input
-              type="text"
-              class="form-control mb-2"
-              placeholder="Connected MACs (comma-separated)"
-              id="macs"
-            />
-            <button type="submit" class="btn btn-success">
-              Scan Attendance
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Attendance Results -->
-      <div class="card">
-        <div class="card-header">Attendance Results</div>
-        <div class="card-body" id="resultsContainer">
-          <!-- Results will be injected here -->
-        </div>
-      </div>
+    <!-- Footer -->
+    <div class="footer">
+      © 2025 School Attendance Tracker. All rights reserved.
     </div>
 
     <script src="js/dashboard.js"></script>
