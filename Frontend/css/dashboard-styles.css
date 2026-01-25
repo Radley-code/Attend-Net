@@ -11,6 +11,17 @@ body {
     Arial, sans-serif;
 }
 
+/*theme handler*/
+body.dark-theme {
+  background-color: #121212;
+  color: #e0e0e0;
+  transition: all 0.3s ease;
+
+  .main-container {
+    background-color: #1e1e1e;
+  }
+}
+
 /* Navbar */
 .navbar-custom {
   background-color: white;
@@ -283,6 +294,83 @@ body {
 .page-subtitle {
   color: #999;
   margin-bottom: 2rem;
+}
+
+/* Welcome Section */
+.welcome-section {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  animation: slideUpFade 0.6s ease-out;
+  border-left: 4px solid #667eea;
+}
+
+.welcome-icon {
+  font-size: 2.5rem;
+  color: #667eea;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: wave 1s ease-in-out 0.3s, fadeIn 0.6s ease-out;
+}
+
+.welcome-message {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+  animation: slideUpFade 0.6s ease-out 0.1s backwards;
+}
+
+.welcome-message span {
+  color: #667eea;
+  font-weight: 700;
+}
+
+.welcome-subtitle {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+  animation: slideUpFade 0.6s ease-out 0.2s backwards;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 70% 70%;
+  }
+  25% {
+    transform: rotate(20deg);
+    transform-origin: 70% 70%;
+  }
+  50% {
+    transform: rotate(-10deg);
+    transform-origin: 70% 70%;
+  }
+  75% {
+    transform: rotate(10deg);
+    transform-origin: 70% 70%;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Statistics Cards */
@@ -562,55 +650,8 @@ tbody tr:hover {
 .logout-btn:hover {
   text-decoration: underline;
 }
-/* ============ RESPONSIVE DESIGN ============ */
 
-/* Tablet (768px - 1024px) */
-@media (max-width: 1024px) {
-  .navbar-custom {
-    padding: 1rem 1.5rem;
-  }
-
-  .navbar-tabs {
-    gap: 1.5rem;
-  }
-
-  .navbar-tabs a {
-    font-size: 0.95rem;
-  }
-
-  .sidebar {
-    width: 180px;
-    padding: 1.5rem 0;
-  }
-
-  .content-area {
-    padding: 1.5rem;
-  }
-
-  .stats-container {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-  }
-
-  .stat-card {
-    padding: 1.5rem;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  table {
-    font-size: 0.9rem;
-  }
-
-  th,
-  td {
-    padding: 0.75rem;
-  }
-}
-
-/* Mobile (Below 768px) */
+/* Mobile Responsive */
 @media (max-width: 768px) {
   .navbar-custom {
     padding: 1rem;
@@ -680,52 +721,90 @@ tbody tr:hover {
     font-size: 0.85rem;
   }
 
-  .sidebar {
-    display: block;
-    width: 60%;
-    max-width: 250px;
+  .mobile-menu-overlay {
+    display: none;
     position: fixed;
-    height: calc(100vh - 70px);
     top: 70px;
-    left: -100%;
-    background: white;
-    z-index: 1001;
-    padding: 0;
-    border: none;
-    border-left: 1px solid #e0e0e0;
-    transition: left 0.3s ease;
-    overflow-y: auto;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .sidebar.active {
     left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
   }
 
-  .sidebar-menu a {
-    padding: 1rem 1.5rem;
-  }
-
-  .main-container {
-    min-height: calc(100vh - 70px);
-  }
-
-  .content-area {
-    width: 100%;
-    padding: 1rem;
+  .mobile-menu-overlay.active {
+    display: block;
   }
 
   .page-title {
     font-size: 1.5rem;
   }
 
-  .page-subtitle {
+  .stats-container {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-section {
+    flex-direction: column;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+  }
+
+  .filter-buttons button {
+    width: 100%;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+  }
+
+  .welcome-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .welcome-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .welcome-message {
+    font-size: 1.4rem;
+  }
+
+  .welcome-subtitle {
     font-size: 0.9rem;
   }
 
+@media (max-width: 480px) {
+  .navbar-custom {
+    padding: 0.75rem 1rem;
+  }
+
+  .navbar-left {
+    gap: 0.5rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
   .stats-container {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: 1fr;
   }
 
   .stat-card {
@@ -740,119 +819,67 @@ tbody tr:hover {
     font-size: 0.8rem;
   }
 
-  .stat-sublabel {
-    display: none;
-  }
-
-  .filter-row {
-    grid-template-columns: 1fr;
-  }
-
-  .filter-buttons {
-    flex-direction: column;
-  }
-
-  .btn-custom {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .session-form {
+  .filter-section {
     padding: 1rem;
   }
 
   .table-responsive {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
-  th,
-  td {
-    padding: 0.5rem;
+  table {
+    font-size: 0.75rem;
   }
 
-  .pagination-custom {
-    gap: 0.5rem;
-    margin-top: 1rem;
+  th, td {
+    padding: 0.4rem;
   }
 
   .pagination-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-  }
-
-  #pageInfo {
+    padding: 0.5rem 1rem;
     font-size: 0.85rem;
-  }
-}
-
-/* Small Mobile (Below 480px) */
-@media (max-width: 480px) {
-  .navbar-custom {
-    padding: 0.75rem;
-  }
-
-  .navbar-left {
-    gap: 0.5rem;
   }
 
   .coordinator-name {
     font-size: 0.75rem;
   }
 
-  .user-profile {
-    width: 35px;
-    height: 35px;
+  .coordinator-email {
+    font-size: 0.65rem;
+  }
+
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
     font-size: 0.9rem;
   }
 
-  .page-title {
-    font-size: 1.25rem;
+  .profile-menu-btn {
+    padding: 0.25rem;
   }
 
-  .content-area {
-    padding: 0.75rem;
+  .theme-toggle {
+    padding: 0.25rem;
+    width: 36px;
+    height: 36px;
   }
 
-  .stats-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
+  .welcome-section {
+    padding: 1rem;
+    margin-bottom: 1rem;
   }
 
-  .stat-card {
-    padding: 0.75rem;
+  .welcome-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
   }
 
-  .stat-icon {
+  .welcome-message {
     font-size: 1.2rem;
   }
 
-  .stat-value {
-    font-size: 1.25rem;
-  }
-
-  .sidebar {
-    width: 80%;
-  }
-
-  .filter-group label {
-    font-size: 0.8rem;
-  }
-
-  .filter-group input,
-  .filter-group select {
+  .welcome-subtitle {
     font-size: 0.85rem;
-    padding: 0.4rem;
   }
-
-  th {
-    font-size: 0.75rem;
-  }
-
-  td {
-    font-size: 0.8rem;
-  }
+}
 }

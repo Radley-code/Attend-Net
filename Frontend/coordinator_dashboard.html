@@ -14,6 +14,7 @@
     />
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/dashboard-styles.css" />
+    <link rel="stylesheet" href="css/dark-theme.css" />
   </head>
   <body>
     <!-- Navbar -->
@@ -59,6 +60,11 @@
         >
           <i class="fas fa-chevron-down"></i>
         </button>
+
+        <!-- theme toggle -->
+        <button class="theme-toggle" id="themeToggle">
+          <i class="fas fa-moon"></i>
+        </button>
       </div>
 
       <!-- Profile Dropdown Menu -->
@@ -82,9 +88,18 @@
         <!-- Reports Tab -->
         <div id="reports" class="tab-content active">
           <div class="page-title">Attendance Report</div>
-          <div class="page-subtitle">
-            Detailed overview of student attendance records, filters, and
-            actions.
+          <div class="welcome-section">
+            <div class="welcome-icon">
+              <i class="fas fa-hand-wave"></i>
+            </div>
+            <h1 class="welcome-message">
+              Welcome back, <span id="welcomeName">Coordinator</span>! 👋
+            </h1>
+            <p class="welcome-subtitle">
+                Let's check in the students' attendance. <p></p>
+              Detailed overview of student attendance records, filters, and
+              actions.
+            </p>
           </div>
 
           <!-- Statistics Cards -->

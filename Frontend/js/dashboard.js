@@ -24,6 +24,26 @@ function clearAttendanceResults() {
   localStorage.removeItem(getAttendanceKey());
 }
 
+// Theme Toggle
+const themeToggle = document.getElementById("themeToggle");
+
+// Load saved theme preference
+const savedTheme = localStorage.getItem("theme") || "light";
+if (savedTheme === "dark") {
+  document.body.classList.add("dark-theme");
+  themeToggle.classList.add("active");
+}
+
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark-theme");
+  themeToggle.classList.toggle("active");
+
+  const theme = document.body.classList.contains("dark-theme")
+    ? "dark"
+    : "light";
+  localStorage.setItem("theme", theme);
+});
+
 // Mobile Menu Toggle
 const hamburgerBtn = document.getElementById("hamburgerBtn");
 const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
@@ -397,6 +417,7 @@ function displayCoordinatorProfile(coordinator) {
 
   document.getElementById("coordNameDisplay").textContent = coordName;
   document.getElementById("coordEmailDisplay").textContent = coordEmail;
+  document.getElementById("welcomeName").textContent = coordName.split(" ")[0]; // First name only for welcome
 
   // Generate initials for avatar
   const initials = coordName

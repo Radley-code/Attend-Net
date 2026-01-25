@@ -1,0 +1,295 @@
+
+/* ============ RESPONSIVE DESIGN ============ */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .navbar-custom {
+    padding: 1rem 1.5rem;
+  }
+
+  .navbar-tabs {
+    gap: 1.5rem;
+  }
+
+  .navbar-tabs a {
+    font-size: 0.95rem;
+  }
+
+  .sidebar {
+    width: 180px;
+    padding: 1.5rem 0;
+  }
+
+  .content-area {
+    padding: 1.5rem;
+  }
+
+  .stats-container {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  th,
+  td {
+    padding: 0.75rem;
+  }
+}
+
+/* Mobile (Below 768px) */
+@media (max-width: 768px) {
+  .navbar-custom {
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .navbar-left {
+    gap: 1rem;
+    order: 1;
+    width: 100%;
+  }
+
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .navbar-tabs {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    top: 70px;
+    left: -100%;
+    background: white;
+    width: 60%;
+    max-width: 250px;
+    gap: 0;
+    z-index: 1001;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    transition: left 0.3s ease;
+  }
+
+  .navbar-tabs.active {
+    display: flex !important;
+    left: 0;
+  }
+
+  .navbar-tabs a {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    border-left: 4px solid transparent;
+    justify-content: flex-start;
+  }
+
+  .navbar-tabs a.active {
+    background-color: #f0f0f0;
+    border-left-color: #007bff;
+    border-bottom-color: #e0e0e0;
+  }
+
+  .navbar-tabs a span {
+    margin-left: 0.5rem;
+  }
+
+  .navbar-right {
+    order: 2;
+    width: 100%;
+  }
+
+  .coordinator-info {
+    flex: 1;
+  }
+
+  .coordinator-name {
+    font-size: 0.85rem;
+  }
+
+  .sidebar {
+    display: block;
+    width: 60%;
+    max-width: 250px;
+    position: fixed;
+    height: calc(100vh - 70px);
+    top: 70px;
+    left: -100%;
+    background: white;
+    z-index: 1001;
+    padding: 0;
+    border: none;
+    border-left: 1px solid #e0e0e0;
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .sidebar-menu a {
+    padding: 1rem 1.5rem;
+  }
+
+  .main-container {
+    min-height: calc(100vh - 70px);
+  }
+
+  .content-area {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .stats-container {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+
+  .stat-sublabel {
+    display: none;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+  }
+
+  .btn-custom {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .session-form {
+    padding: 1rem;
+  }
+
+  .table-responsive {
+    font-size: 0.8rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem;
+  }
+
+  .pagination-custom {
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .pagination-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  #pageInfo {
+    font-size: 0.85rem;
+  }
+}
+
+/* Small Mobile (Below 480px) */
+@media (max-width: 480px) {
+  .navbar-custom {
+    padding: 0.75rem;
+  }
+
+  .navbar-left {
+    gap: 0.5rem;
+  }
+
+  .coordinator-name {
+    font-size: 0.75rem;
+  }
+
+  .user-profile {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .content-area {
+    padding: 0.75rem;
+  }
+
+  .stats-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .stat-card {
+    padding: 0.75rem;
+  }
+
+  .stat-icon {
+    font-size: 1.2rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .sidebar {
+    width: 80%;
+  }
+
+  .filter-group label {
+    font-size: 0.8rem;
+  }
+
+  .filter-group input,
+  .filter-group select {
+    font-size: 0.85rem;
+    padding: 0.4rem;
+  }
+
+  th {
+    font-size: 0.75rem;
+  }
+
+  td {
+    font-size: 0.8rem;
+  }
+}

@@ -1,3 +1,39 @@
+// Theme Toggle for Login Page
+const loginThemeToggle = document.getElementById("loginThemeToggle");
+
+// Load saved theme preference
+const savedLoginTheme = localStorage.getItem("theme") || "light";
+if (savedLoginTheme === "dark") {
+  document.body.classList.add("dark-theme");
+  loginThemeToggle.classList.add("active");
+}
+
+loginThemeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark-theme");
+  loginThemeToggle.classList.toggle("active");
+
+  const theme = document.body.classList.contains("dark-theme")
+    ? "dark"
+    : "light";
+  localStorage.setItem("theme", theme);
+});
+
+// Password Toggle
+const passwordToggle = document.getElementById("passwordToggle");
+const passwordInput = document.getElementById("password");
+
+passwordToggle.addEventListener("click", (e) => {
+  e.preventDefault();
+  const type =
+    passwordInput.getAttribute("type") === "password" ? "text" : "password";
+  passwordInput.setAttribute("type", type);
+
+  // Toggle eye icon
+  const icon = passwordToggle.querySelector("i");
+  icon.classList.toggle("fa-eye");
+  icon.classList.toggle("fa-eye-slash");
+});
+
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("email").value;

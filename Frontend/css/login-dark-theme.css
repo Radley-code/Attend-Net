@@ -1,0 +1,137 @@
+/* Dark Theme for Login Page */
+body.dark-theme {
+  background: linear-gradient(135deg, #1a1d2e 0%, #0d0f1f 100%) !important;
+}
+
+body.dark-theme .login-card {
+  background: #161b22;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-theme .logo-icon {
+  color: #58a6ff;
+}
+
+body.dark-theme .login-title {
+  color: #e0e0e0;
+}
+
+body.dark-theme .login-subtitle {
+  color: #8b949e;
+}
+
+body.dark-theme .form-group label {
+  color: #b0b9c3;
+}
+
+body.dark-theme .form-group input {
+  background-color: #0d1117;
+  border-color: #30363d;
+  color: #e0e0e0;
+}
+
+body.dark-theme .form-group input::placeholder {
+  color: #6e7681;
+}
+
+body.dark-theme .form-group input:focus {
+  background-color: #0d1117;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+  color: #e0e0e0;
+}
+
+body.dark-theme .login-btn {
+  background: linear-gradient(135deg, #238636 0%, #1f6feb 100%);
+  border: none;
+}
+
+body.dark-theme .login-btn:hover {
+  background: linear-gradient(135deg, #2ea043 0%, #2f81f7 100%);
+  box-shadow: 0 8px 24px rgba(88, 166, 255, 0.3);
+}
+
+body.dark-theme .form-check-label {
+  color: #b0b9c3;
+}
+
+body.dark-theme .form-check-input {
+  background-color: #0d1117;
+  border-color: #30363d;
+}
+
+body.dark-theme .form-check-input:checked {
+  background-color: #238636;
+  border-color: #238636;
+}
+
+body.dark-theme .loading-spinner {
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-color: #58a6ff;
+}
+
+body.dark-theme .error {
+  color: #f85149;
+  background-color: #161b22;
+  border-color: #da3633;
+}
+
+body.dark-theme .success {
+  color: #3fb950;
+  background-color: #161b22;
+  border-color: #3fb950;
+}
+
+/* Theme Toggle Button for Login Page */
+.login-theme-toggle {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  color: white;
+  font-size: 1.2rem;
+  padding: 0.75rem;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+.login-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.login-theme-toggle i {
+  transition: transform 0.4s ease;
+}
+
+.login-theme-toggle.active i {
+  transform: rotate(180deg);
+}
+
+body.dark-theme .login-theme-toggle {
+  background: rgba(88, 166, 255, 0.2);
+  border-color: rgba(88, 166, 255, 0.3);
+}
+
+body.dark-theme .login-theme-toggle:hover {
+  background: rgba(88, 166, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2);
+}
+
+/* Dark Theme Password Toggle */
+body.dark-theme .password-toggle {
+  color: #6e7681;
+}
+
+body.dark-theme .password-toggle:hover {
+  color: #58a6ff;
+}
