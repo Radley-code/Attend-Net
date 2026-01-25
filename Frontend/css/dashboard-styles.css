@@ -646,6 +646,7 @@ tbody tr:hover {
   }
 
   .navbar-tabs.active {
+    display: flex !important;
     left: 0;
   }
 

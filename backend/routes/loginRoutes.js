@@ -82,14 +82,18 @@ router.post("/create", async (req, res) => {
 // Get coordinator profile endpoint (must come BEFORE /:id route)
 router.get("/me", auth, async (req, res) => {
   try {
-    const coordinatorData = await Coordinator.findById(req.user.id).select("name email");
+    const coordinatorData = await Coordinator.findById(req.user.id).select(
+      "name email",
+    );
     if (!coordinatorData) {
       return res.status(404).json({ message: "Coordinator not found" });
     }
     return res.status(200).json(coordinatorData);
   } catch (err) {
     console.error("Get coordinator profile error:", err);
-    return res.status(500).json({ message: "Error fetching coordinator profile" });
+    return res
+      .status(500)
+      .json({ message: "Error fetching coordinator profile" });
   }
 });
 
