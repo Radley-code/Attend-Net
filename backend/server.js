@@ -42,4 +42,8 @@ app.use("/api/attendance", attendanceRoutes);
 const loginRoutes = require("./routes/loginRoutes");
 app.use("/api/coordinator", loginRoutes);
 
+//Import coordinator routes to reset the password(this is protected route)
+const coordinatorRoutes = require("./routes/coordinatorRoutes"); 
+app.use("/api/coordinator", coordinatorRoutes);
+
 module.exports = app;
