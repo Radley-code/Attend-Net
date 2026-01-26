@@ -1,0 +1,115 @@
+/* Dark Theme for Student Registration */
+body.dark-theme {
+  background: linear-gradient(135deg, #1a1d2e 0%, #0d0f1f 100%) !important;
+}
+
+body.dark-theme .registration-card {
+  background: #161b22;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-theme .welcome-title {
+  color: #e0e0e0;
+}
+
+body.dark-theme .welcome-subtitle {
+  color: #8b949e;
+}
+
+body.dark-theme .form-label {
+  color: #b0b9c3;
+}
+
+body.dark-theme .form-label i {
+  color: #58a6ff;
+}
+
+body.dark-theme .form-control {
+  background-color: #0d1117;
+  border-color: #30363d;
+  color: #e0e0e0;
+}
+
+body.dark-theme .form-control::placeholder {
+  color: #6e7681;
+}
+
+body.dark-theme .form-control:focus {
+  background-color: #0d1117;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+
+body.dark-theme .mac-hint {
+  color: #6e7681;
+}
+
+body.dark-theme .detect-mac-btn {
+  color: #58a6ff;
+}
+
+body.dark-theme .detect-mac-btn:hover {
+  color: #79c0ff;
+}
+
+body.dark-theme .register-btn {
+  background: linear-gradient(135deg, #238636 0%, #1f6feb 100%);
+  box-shadow: 0 4px 15px rgba(88, 166, 255, 0.2);
+}
+
+body.dark-theme .register-btn:hover {
+  background: linear-gradient(135deg, #2ea043 0%, #2f81f7 100%);
+  box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+}
+
+body.dark-theme .register-btn:disabled {
+  background: linear-gradient(135deg, #238636 0%, #1f6feb 100%);
+  opacity: 0.5;
+}
+
+body.dark-theme .back-btn {
+  background: rgba(88, 166, 255, 0.15);
+  border-color: rgba(88, 166, 255, 0.2);
+  color: #79c0ff;
+}
+
+body.dark-theme .back-btn:hover {
+  background: rgba(88, 166, 255, 0.25);
+}
+
+body.dark-theme .header-title {
+  color: #e0e0e0;
+}
+
+body.dark-theme .theme-toggle-student {
+  background: rgba(88, 166, 255, 0.15);
+  border-color: rgba(88, 166, 255, 0.2);
+  color: #79c0ff;
+}
+
+body.dark-theme .theme-toggle-student:hover {
+  background: rgba(88, 166, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2);
+}
+
+body.dark-theme .registration-message.success {
+  background-color: #0d3920;
+  color: #3fb950;
+  border: 1px solid #238636;
+}
+
+body.dark-theme .registration-message.error {
+  background-color: #3d0f0f;
+  color: #f85149;
+  border: 1px solid #da3633;
+}
+
+body.dark-theme .registration-message.info {
+  background-color: #0f3f5e;
+  color: #58a6ff;
+  border: 1px solid #1f6feb;
+}
+
+body.dark-theme .welcome-icon {
+  box-shadow: 0 4px 15px rgba(88, 166, 255, 0.2);
+}

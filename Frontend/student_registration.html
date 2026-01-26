@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Registration - AttendNet</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/student-registration.css" />
+    <link rel="stylesheet" href="css/student-dark-theme.css" />
+  </head>
+  <body>
+    <!-- Theme Toggle Button -->
+    <button
+      class="theme-toggle-student"
+      id="studentThemeToggle"
+      aria-label="Toggle theme"
+    >
+      <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="registration-container">
+      <!-- Header -->
+      <div class="registration-header">
+        <h1 class="header-title">Register Student</h1>
+        <div class="header-spacer"></div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="registration-card">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+          <div class="welcome-icon">
+            <i class="fas fa-user-graduate"></i>
+          </div>
+          <h2 class="welcome-title">Welcome, Student!</h2>
+          <p class="welcome-subtitle">
+            Please provide your details and register your device to get started
+            with School Attendance Tracking, AttendNet.
+          </p>
+        </div>
+
+        <!-- Form -->
+        <form id="registrationForm">
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="fullName" class="form-label">
+              <i class="fas fa-user"></i> Full Name
+            </label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              class="form-control"
+              placeholder="John Doe"
+              required
+            />
+          </div>
+
+          <!-- Department -->
+          <div class="form-group">
+            <label for="department" class="form-label">
+              <i class="fas fa-building"></i> Department
+            </label>
+            <input
+              type="text"
+              id="department"
+              name="department"
+              class="form-control"
+              placeholder="e.g., Computer Science"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email" class="form-label">
+              <i class="fas fa-envelope"></i> Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-control"
+              placeholder="john@finistech.com"
+              required
+            />
+          </div>
+
+          <!-- MAC Address -->
+          <div class="form-group">
+            <label for="macAddress" class="form-label">
+              <i class="fas fa-network-wired"></i> MAC Address
+              <button
+                type="button"
+                class="detect-mac-btn"
+                id="detectMacBtn"
+                title="Auto-detect device MAC address"
+              >
+                <i class="fas fa-bolt"></i>
+              </button>
+            </label>
+            <input
+              type="text"
+              id="macAddress"
+              name="macAddress"
+              class="form-control"
+              placeholder="AA:BB:CC:DD:EE:FF"
+              pattern="([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})"
+              required
+            />
+            <small class="mac-hint">Format: AA:BB:CC:DD:EE:FF</small>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="register-btn" id="registerBtn">
+            <i class="fas fa-check-circle"></i> Register Device
+          </button>
+        </form>
+
+        <!-- Message -->
+        <div id="registrationMessage" class="registration-message"></div>
+      </div>
+    </div>
+
+    <script src="js/student_registration.js"></script>
+  </body>
+</html>

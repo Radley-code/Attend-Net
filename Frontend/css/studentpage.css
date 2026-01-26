@@ -1,0 +1,33 @@
+body{
+   background: #fff;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   min-height: 100vh;
+   margin: 0;
+}
+
+.container {
+  background: #ffffff;
+  padding: 24px 28px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  max-width: 400px;
+  width: 100%;
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+    font: bold 1.5em sans-serif;;
+}
+
+.info{
+    background: rgb(178, 212, 178);
+    border-radius: 4%;
+    padding: 10px;
+    margin-top: 10px;
+    text-align: center;
+}
