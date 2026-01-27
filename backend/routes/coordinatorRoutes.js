@@ -3,6 +3,7 @@ const router = express.Router();
 const Coordinator = require("../models/coordinator");
 const verifyCoordinator = require("../middleware/auth");
 const bcrypt = require("bcryptjs");
+//route to fetch coordinator info to display in the dashboard 
 router.get("/me", verifyCoordinator, async (req, res) => {
   try {
     const coordinatorData = await Coordinator.findById(req.user.id).select(

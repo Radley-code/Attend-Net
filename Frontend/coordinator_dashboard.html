@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/dashboard-styles.css" />
     <link rel="stylesheet" href="css/dark-theme.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body>
     <!-- Navbar -->
@@ -190,9 +191,8 @@
                 <thead>
                   <tr>
                     <th>Student Name</th>
-                    <th>Student ID</th>
+                    <th>Department</th>
                     <th>Course</th>
-                    <th>Session</th>
                     <th>Status</th>
                     <th>Timestamp</th>
                   </tr>
@@ -232,32 +232,41 @@
                     type="text"
                     id="course"
                     placeholder="e.g., Mathematics I"
-                    required
+                    
                   />
                 </div>
                 <div class="form-group">
                   <label for="date">Date</label>
-                  <input type="date" id="date" required />
+                  <input type="date" id="date"  />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label for="startTime">Start Time</label>
-                  <input type="time" id="startTime" required />
+                  <input type="time" id="startTime"  />
                 </div>
                 <div class="form-group">
                   <label for="endTime">End Time</label>
-                  <input type="time" id="endTime" required />
+                  <input type="time" id="endTime"  />
                 </div>
               </div>
               <div class="form-group">
-                <label for="departments">Departments (comma-separated)</label>
-                <input
-                  type="text"
-                  id="departments"
-                  placeholder="e.g., CS, EE, ME"
-                  required
-                />
+                <label for="departmentSelect">Select Departments</label>
+                <div class="custom-dropdown-container">
+                  <button type="button" id="departmentToggle" class="custom-dropdown-button">
+                    <span id="selectedText">Select departments...</span>
+                    <i class="fas fa-chevron-down" style="margin-left: 0.5rem;"></i>
+                  </button>
+                  <div id="departmentDropdown" class="custom-dropdown-menu" style="display: none;">
+                    <div class="dropdown-item select-all" data-value="__all__">
+                      <i class="fas fa-check-double"></i>
+                      <span>Select All</span>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <!-- Department options will be added here by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" id="departments"  />
               </div>
               <button type="submit" class="btn-custom btn-primary-custom">
                 <i class="fas fa-plus"></i> Create Session
@@ -276,7 +285,7 @@
                     type="text"
                     id="sessionId"
                     placeholder="Enter session ID"
-                    required
+                    
                   />
                 </div>
                 <div class="form-group">
@@ -285,7 +294,7 @@
                     type="text"
                     id="macs"
                     placeholder="e.g., AA:BB:CC:DD:EE:FF"
-                    required
+                    
                   />
                 </div>
               </div>

@@ -8,12 +8,9 @@ const registerStudent = async (req, res) => {
 
     // Basic validation
     if (!name || !email || !department || !macAddress) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Missing required fields: name, email, department, macAddress",
-        });
+      return res.status(400).json({
+        message: "Missing required fields: name, email, department, macAddress",
+      });
     }
 
     // Check if user with the same email already exists
@@ -32,7 +29,7 @@ const registerStudent = async (req, res) => {
   } catch (error) {
     console.error(
       "Error registering student:",
-      error && error.stack ? error.stack : error
+      error && error.stack ? error.stack : error,
     );
     // If headers already sent, just exit
     if (res.headersSent) return;
@@ -42,6 +39,24 @@ const registerStudent = async (req, res) => {
   }
 };
 
+const getAllDepartments = async (req, res) => {
+  try {
+    // Get all unique departments from registered students
+    const departments = await User.distinct("department");
+
+    if (!departments || departments.length === 0) {
+      return res.status(200).json({ departments: [] });
+    }
+
+    return res.status(200).json({ departments: departments.sort() });
+  } catch (error) {
+    console.error("Error fetching departments:", error);
+    if (res.headersSent) return;
+    return res.status(500).json({ message: "Error fetching departments" });
+  }
+};
+
 module.exports = {
   registerStudent,
+  getAllDepartments,
 };

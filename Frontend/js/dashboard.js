@@ -155,22 +155,20 @@ function populateAttendanceTable(presentArr, absentArr) {
   presentArr.forEach((student) => {
     allRecords.push({
       name: student.name,
-      id: student.id || "N/A",
+      department: student.department || "N/A",
       course: student.course || "N/A",
-      session: student.session || "N/A",
       status: "Present",
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date(student.timestamp).toLocaleString(),
     });
   });
 
   absentArr.forEach((student) => {
     allRecords.push({
       name: student.name,
-      id: student.id || "N/A",
+      department: student.department || "N/A",
       course: student.course || "N/A",
-      session: student.session || "N/A",
       status: "Absent",
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date(student.timestamp).toLocaleString(),
     });
   });
 
@@ -224,7 +222,7 @@ function renderTablePage() {
 
   if (filteredRecords.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="6" style="text-align: center; color: #999">No attendance records found</td></tr>';
+      '<tr><td colspan="5" style="text-align: center; color: #999">No attendance records found</td></tr>';
     document.getElementById("pageInfo").textContent = "Page 1";
     document.getElementById("prevBtn").disabled = true;
     document.getElementById("nextBtn").disabled = true;
@@ -240,9 +238,8 @@ function renderTablePage() {
       (record) => `
     <tr>
       <td>${record.name}</td>
-      <td>${record.id}</td>
+      <td>${record.department}</td>
       <td>${record.course}</td>
-      <td>${record.session}</td>
       <td><span class="status-${record.status.toLowerCase()}">${record.status}</span></td>
       <td>${record.timestamp}</td>
     </tr>
@@ -458,40 +455,303 @@ function loadCoordinatorInfo() {
   document.getElementById("coordNameDisplay").textContent = coordName;
 }
 
+// Fetch and load available departments
+async function loadAvailableDepartments() {
+  try {
+    const res = await fetch("http://localhost:3000/api/users/departments");
+    const data = await res.json();
+
+    if (!res.ok || !data.departments) {
+      console.warn("No departments available from database");
+      return;
+    }
+
+    const dropdownMenu = document.querySelector(".custom-dropdown-menu");
+
+    // Map departments to department icons
+    const departmentIcons = {
+      "Computer Science": "fa-laptop-code",
+      "Information Technology": "fa-server",
+      Engineering: "fa-cog",
+      Business: "fa-briefcase",
+      Medicine: "fa-stethoscope",
+      Arts: "fa-palette",
+      Science: "fa-flask",
+      Education: "fa-book",
+      Law: "fa-gavel",
+      Economics: "fa-chart-line",
+      Psychology: "fa-brain",
+      Biology: "fa-dna",
+      Chemistry: "fa-flask-vial",
+      Physics: "fa-atom",
+      Mathematics: "fa-calculator",
+      History: "fa-scroll",
+      Literature: "fa-book-open",
+      Philosophy: "fa-lightbulb",
+      "Environmental Science": "fa-leaf",
+      Architecture: "fa-building",
+    };
+
+    // Add department options
+    data.departments.forEach((dept) => {
+      const item = document.createElement("div");
+      item.className = "dropdown-item";
+      item.dataset.value = dept;
+
+      const icon = departmentIcons[dept] || "fa-graduation-cap";
+      item.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${dept}</span>
+      `;
+
+      item.addEventListener("click", function (e) {
+        e.stopPropagation();
+        toggleDepartmentSelection(dept);
+        updateDepartmentsField();
+      });
+
+      dropdownMenu.appendChild(item);
+    });
+
+    // Setup dropdown toggle
+    const toggle = document.getElementById("departmentToggle");
+    const menu = document.getElementById("departmentDropdown");
+    const selectAllItem = document.querySelector(".dropdown-item.select-all");
+
+    toggle.addEventListener("click", () => {
+      const isOpen = menu.style.display !== "none";
+      menu.style.display = isOpen ? "none" : "block";
+      toggle.classList.toggle("active", !isOpen);
+    });
+
+    selectAllItem.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const items = document.querySelectorAll(
+        ".dropdown-item:not(.select-all)",
+      );
+      const allSelected = Array.from(items).every((item) =>
+        item.classList.contains("selected"),
+      );
+
+      items.forEach((item) => {
+        item.classList.toggle("selected", !allSelected);
+      });
+
+      updateDepartmentsField();
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".custom-dropdown-container")) {
+        menu.style.display = "none";
+        toggle.classList.remove("active");
+      }
+    });
+  } catch (err) {
+    console.error("Error loading departments:", err);
+  }
+}
+
+function toggleDepartmentSelection(dept) {
+  const item = document.querySelector(`.dropdown-item[data-value="${dept}"]`);
+  if (item) {
+    item.classList.toggle("selected");
+  }
+}
+
+function updateDepartmentsField() {
+  const selectedItems = document.querySelectorAll(
+    ".dropdown-item.selected:not(.select-all)",
+  );
+  const selectedDepts = Array.from(selectedItems).map(
+    (item) => item.dataset.value,
+  );
+
+  const selectedText = document.getElementById("selectedText");
+  if (selectedDepts.length === 0) {
+    selectedText.textContent = "Select departments...";
+  } else if (selectedDepts.length === 1) {
+    selectedText.textContent = selectedDepts[0];
+  } else {
+    selectedText.textContent = `${selectedDepts.length} departments selected`;
+  }
+
+  document.getElementById("departments").value = selectedDepts.join(",");
+}
+
 // Session Form Handler
 document.getElementById("sessionForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const course = document.getElementById("course").value;
+  const course = document.getElementById("course").value.trim();
   const date = document.getElementById("date").value;
   const startTime = document.getElementById("startTime").value;
   const endTime = document.getElementById("endTime").value;
-  const departments = document
-    .getElementById("departments")
-    .value.split(",")
-    .map((d) => d.trim());
+  const departmentsField = document.getElementById("departments").value;
+
+  // Validate all fields
+  if (!course) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Course Name",
+      text: "Please enter a course name",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  if (!date) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Date",
+      text: "Please select a date for the session",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  if (!startTime) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Start Time",
+      text: "Please select a start time",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  if (!endTime) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing End Time",
+      text: "Please select an end time",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  if (!departmentsField) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Selection",
+      text: "Please select at least one department",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  const departments = departmentsField.split(",").map((d) => d.trim());
+
+  if (departments.length === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Selection",
+      text: "Please select at least one department",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
 
   try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({
+        icon: "error",
+        title: "Session Expired",
+        text: "Please log in again to continue.",
+        confirmButtonColor: "#1976d2",
+        customClass: {
+          container: "swal-container",
+          popup: "swal-popup",
+        },
+      });
+      return;
+    }
+
+    // Show loading state
+    Swal.fire({
+      title: "Creating Session",
+      html: "Please wait while we create your session...",
+      icon: "info",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: (modal) => {
+        Swal.showLoading();
+      },
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+
     const res = await fetch("http://localhost:3000/api/sessions/create", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ course, date, startTime, endTime, departments }),
     });
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to create session");
 
-    alert("Session created successfully: " + data.message);
-    document.getElementById("sessionForm").reset();
+    Swal.fire({
+      icon: "success",
+      title: "Session Created!",
+      html: `<strong>${course}</strong> session has been created successfully.<br><small>Session ID: ${data.message}</small>`,
+      confirmButtonColor: "#4caf50",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    }).then(() => {
+      document.getElementById("sessionForm").reset();
+      document.getElementById("selectedText").textContent =
+        "Select departments...";
+    });
   } catch (err) {
     console.error("Session create error:", err);
-    alert("Error creating session: " + (err.message || err));
+    Swal.fire({
+      icon: "error",
+      title: "Creation Failed",
+      text: err.message || "An error occurred while creating the session",
+      confirmButtonColor: "#f44336",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
   }
 });
 
 // Scan Form Handler
 document.getElementById("scanForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const sessionId = document.getElementById("sessionId").value;
+  const sessionId = document.getElementById("sessionId").value.trim();
   const macs = document.getElementById("macs").value
     ? document
         .getElementById("macs")
@@ -501,9 +761,31 @@ document.getElementById("scanForm").addEventListener("submit", async (e) => {
   const resultsContainer = document.getElementById("resultsContainer");
   const submitBtn = document.querySelector('#scanForm button[type="submit"]');
 
-  if (macs.length === 0 || sessionId.length === 0) {
-    resultsContainer.innerHTML =
-      '<div style="padding: 1rem; color: #dc3545; background: #f8d7da; border-radius: 4px;">Please provide session ID and MAC addresses.</div>';
+  if (!sessionId) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Session ID",
+      text: "Please provide a session ID",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  if (macs.length === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing MAC Addresses",
+      text: "Please provide at least one MAC address",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
     return;
   }
 
@@ -520,6 +802,14 @@ document.getElementById("scanForm").addEventListener("submit", async (e) => {
 
     const data = await res.json();
     console.log("scan response raw:", data, "status:", res.status);
+    console.log(
+      "Present data sample:",
+      data.present ? data.present[0] : "no present",
+    );
+    console.log(
+      "Absent data sample:",
+      data.absent ? data.absent[0] : "no absent",
+    );
     if (!res.ok)
       throw new Error((data && data.message) || "Attendance scan failed");
 
@@ -605,4 +895,5 @@ window.addEventListener("DOMContentLoaded", () => {
   fetchCoordinatorData();
   loadCoordinatorInfo();
   updateReportStats();
+  loadAvailableDepartments();
 });

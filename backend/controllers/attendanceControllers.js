@@ -19,7 +19,7 @@ const scanAttendance = async (req, res) => {
         .toLowerCase()
         .replace(/[^a-f0-9]/gi, "");
     const normalizedConnectedSet = new Set(
-      connectedMacs.map((m) => normalizeMac(m))
+      connectedMacs.map((m) => normalizeMac(m)),
     );
 
     const session = await Session.findById(sessionId);
@@ -42,7 +42,7 @@ const scanAttendance = async (req, res) => {
     if ((!students || students.length === 0) && sessionDepts.length > 0) {
       const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const deptRegexes = sessionDepts.map(
-        (d) => new RegExp(`^${escapeRegExp(d)}$`, "i")
+        (d) => new RegExp(`^${escapeRegExp(d)}$`, "i"),
       );
       students = await User.find({ department: { $in: deptRegexes } });
     }
@@ -53,9 +53,9 @@ const scanAttendance = async (req, res) => {
       const studentMacNormalized = normalizeMac(student.macAddress);
       const isPresent = normalizedConnectedSet.has(studentMacNormalized);
       const status = isPresent ? "Present" : "Absent";
- //console log for debugging error had when checking for students present
+      //console log for debugging error had when checking for students present
       console.log(
-        `Checking student ${student.name} mac: ${student.macAddress} normalized: ${studentMacNormalized} present: ${isPresent}`
+        `Checking student ${student.name} mac: ${student.macAddress} normalized: ${studentMacNormalized} present: ${isPresent}`,
       );
 
       // Upsert attendance so repeated scans update existing records instead of creating duplicates
@@ -66,14 +66,14 @@ const scanAttendance = async (req, res) => {
           status: status.toLowerCase(),
           timestamp: new Date(),
         },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+        { upsert: true, new: true, setDefaultsOnInsert: true },
       );
       savedIds.push(saved._id);
       console.log(
         "Saved/updated attendance id:",
         saved._id.toString(),
         "status:",
-        saved.status
+        saved.status,
       );
     }
 
@@ -90,6 +90,7 @@ const scanAttendance = async (req, res) => {
       enriched = await Attendance.find({ _id: { $in: savedIds } })
         .populate("studentId", "name email department")
         .populate("sessionId", "course date startTime endTime");
+      console.log("Enriched data sample:", enriched[0]);
     }
 
     // return the populated attendance records as the results
@@ -99,10 +100,9 @@ const scanAttendance = async (req, res) => {
     const present = results
       .filter((r) => r.status === "present")
       .map((r) => ({
-        id: r._id,
-        studentId: r.studentId._id,
         name: r.studentId.name,
         department: r.studentId.department,
+        course: r.sessionId.course,
         status: "Present",
         timestamp: r.timestamp,
       }));
@@ -110,10 +110,9 @@ const scanAttendance = async (req, res) => {
     const absent = results
       .filter((r) => r.status === "absent")
       .map((r) => ({
-        id: r._id,
-        studentId: r.studentId._id,
         name: r.studentId.name,
         department: r.studentId.department,
+        course: r.sessionId.course,
         status: "Absent",
         timestamp: r.timestamp,
       }));
