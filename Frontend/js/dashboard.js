@@ -481,7 +481,8 @@ async function loadAvailableDepartments() {
       Law: "fa-gavel",
       Economics: "fa-chart-line",
       Psychology: "fa-brain",
-      Biology: "fa-dna",
+     "Medicine": "fa-dna",
+     "Agrobiotechnology": "fa-dna",
       Chemistry: "fa-flask-vial",
       Physics: "fa-atom",
       Mathematics: "fa-calculator",
@@ -489,7 +490,7 @@ async function loadAvailableDepartments() {
       Literature: "fa-book-open",
       Philosophy: "fa-lightbulb",
       "Environmental Science": "fa-leaf",
-      Architecture: "fa-building",
+      "Civil Engineering": "fa-building",
     };
 
     // Add department options
