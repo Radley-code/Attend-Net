@@ -46,4 +46,8 @@ app.use("/api/coordinator", loginRoutes);
 const coordinatorRoutes = require("./routes/coordinatorRoutes"); 
 app.use("/api/coordinator", coordinatorRoutes);
 
+// Import admin routes
+const adminRoutes = require("./routes/adminRoutes");
+app.use("/api/admin", adminRoutes);
+
 module.exports = app;
