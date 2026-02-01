@@ -36,48 +36,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Create coordinator endpoint
-router.post("/create", async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Name, email, and password required" });
-    }
-
-    const existing = await Coordinator.findOne({ email });
-    if (existing) {
-      return res
-        .status(409)
-        .json({ message: "Coordinator with this email already exists" });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-    const coordinator = new Coordinator({
-      name,
-      email,
-      password: hashed,
-      role: role || "coordinator",
-    });
-
-    await coordinator.save();
-    return res.status(201).json({
-      message: "Coordinator created successfully",
-      coordinator: {
-        id: coordinator._id,
-        name,
-        email,
-        role: coordinator.role,
-      },
-    });
-  } catch (err) {
-    console.error("Create coordinator error:", err);
-    return res
-      .status(500)
-      .json({ message: "Server error creating coordinator" });
-  }
-});
 
 // Get coordinator profile endpoint (must come BEFORE /:id route)
 router.get("/me", auth, async (req, res) => {

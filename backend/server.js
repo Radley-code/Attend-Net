@@ -18,12 +18,12 @@ mongoose
 
 // Simple test route
 app.get("/", (req, res) => {
-  res.send("AttendNet Server is running");
+  res.send(" Server is running");
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`AttendNet Server is running on port ${PORT}`);
 });
 
 // Import user routes
@@ -42,9 +42,7 @@ app.use("/api/attendance", attendanceRoutes);
 const loginRoutes = require("./routes/loginRoutes");
 app.use("/api/coordinator", loginRoutes);
 
-//Import coordinator routes to reset the password(this is protected route)
-const coordinatorRoutes = require("./routes/coordinatorRoutes"); 
-app.use("/api/coordinator", coordinatorRoutes);
+
 
 // Import admin routes
 const adminRoutes = require("./routes/adminRoutes");

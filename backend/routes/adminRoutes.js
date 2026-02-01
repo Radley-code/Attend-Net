@@ -3,8 +3,10 @@ const router = express.Router();
 const Admin = require("../models/admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Coordinator = require("../models/coordinatorModel");
+const Coordinator = require("../models/coordinator");
 const verifyAdmin = require("../middleware/verifyAdmin");
+const User = require("../models/user");
+
 
 // Admin Login
 router.post("/login", async (req, res) => {
@@ -33,24 +35,47 @@ router.post("/login", async (req, res) => {
 
 
 // Admin creates coordinator
-router.post("/create-coordinator", verifyAdmin, async (req, res) => {
+
+// Create coordinator endpoint
+router.post("/create", verifyAdmin, async (req, res) => {
   try {
     const { name, email, password, department } = req.body;
+    if (!name || !email || !password || !department) {
+      return res
+        .status(400)
+        .json({ message: "Name, email, department and password required" });
+    }
+
+    const existing = await Coordinator.findOne({ email });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "Coordinator with this email already exists" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
-
     const coordinator = new Coordinator({
       name,
       email,
       password: hashed,
-      department
+      department,
     });
 
     await coordinator.save();
-
-    res.json({ message: "Coordinator created successfully" });
+    return res.status(201).json({
+      message: "Coordinator created successfully",
+      coordinator: {
+        id: coordinator._id,
+        name,
+        email,
+        department,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error creating coordinator" });
+    console.error("Create coordinator error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error creating coordinator" });
   }
 });
 
@@ -150,5 +175,34 @@ router.put("/coordinators/:id", verifyAdmin, async (req, res) => {
   }
 });
 
+// // RESET PASSWORD (Admin Only)
+// RESET PASSWORD (Admin Only)
+router.post("/reset-password", verifyAdmin, async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: "Email and newPassword are required" });
+    }
+
+    // Check if coordinator exists
+    const coordinator = await Coordinator.findOne({ email });
+    if (!coordinator) {
+      return res.status(404).json({ message: "Coordinator not found" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    coordinator.password = hashedPassword;
+    await coordinator.save();
+
+    res.json({ message: "Password reset successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error resetting password" });
+  }
+});
 
 module.exports = router;
