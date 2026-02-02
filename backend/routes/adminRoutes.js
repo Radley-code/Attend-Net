@@ -32,10 +32,6 @@ router.post("/login", async (req, res) => {
 });
 
 
-
-
-// Admin creates coordinator
-
 // Create coordinator endpoint
 router.post("/create", verifyAdmin, async (req, res) => {
   try {
