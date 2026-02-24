@@ -12,7 +12,7 @@ exports.registerUser = async (req, res) => {
       name,
       email,
       department,
-      macaddress: mac
+      macaddress: mac,
     });
 
     await user.save();
@@ -23,41 +23,41 @@ exports.registerUser = async (req, res) => {
 };
 
 const form = document.getElementById("studentForm");
-    const messageEl = document.getElementById("message");
+const messageEl = document.getElementById("message");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      messageEl.textContent = "";
-      messageEl.className = "";
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  messageEl.textContent = "";
+  messageEl.className = "";
 
-      const payload = {
-        name: document.getElementById("name").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        department: document.getElementById("department").value.trim(),
-        macaddress: document.getElementById("macaddress").value.trim()
-      };
+  const payload = {
+    name: document.getElementById("name").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    department: document.getElementById("department").value.trim(),
+    macaddress: document.getElementById("macaddress").value.trim(),
+  };
 
-      try {
-        const res = await fetch("http://localhost:3000/api/users/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          messageEl.textContent = data.message || "Registered successfully.";
-          messageEl.className = "success";
-          form.reset();
-        } else {
-          messageEl.textContent = data.message || "Registration failed.";
-          messageEl.className = "error";
-        }
-      } catch (err) {
-        messageEl.textContent = "Network error. Please try again.";
-        messageEl.className = "error";
-      }
+  try {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/users/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      messageEl.textContent = data.message || "Registered successfully.";
+      messageEl.className = "success";
+      form.reset();
+    } else {
+      messageEl.textContent = data.message || "Registration failed.";
+      messageEl.className = "error";
+    }
+  } catch (err) {
+    messageEl.textContent = "Network error. Please try again.";
+    messageEl.className = "error";
+  }
+});

@@ -26,26 +26,48 @@ const macAddressInput = document.getElementById("macAddress");
 const detectMacBtn = document.getElementById("detectMacBtn");
 
 // Detect MAC Address
-detectMacBtn.addEventListener("click", (e) => {
+detectMacBtn.addEventListener("click", async (e) => {
   e.preventDefault();
   detectMacBtn.disabled = true;
-  detectMacBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  detectMacBtn.innerHTML =
+    '<i class="fas fa-spinner fa-spin"></i> Detecting...';
 
-  // Simulate MAC detection (in a real app, this would use a native library)
-  // For now, we'll generate a demo MAC or let user enter it manually
-  setTimeout(() => {
-    // Generate a demo MAC address pattern
-    const demoMac = "AA:BB:CC:DD:EE:FF";
-    macAddressInput.placeholder =
-      "Auto-detect not available on this browser. Enter manually.";
+  try {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/users/detect-mac`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      macAddressInput.value = data.macAddress.toUpperCase();
+      showMessage(`✓ MAC address detected: ${data.macAddress}`, "success");
+    } else {
+      showMessage(
+        `Unable to auto-detect MAC address.\n\n` +
+          `📱 Find your MAC address:\n` +
+          `Windows: Settings > Network > WiFi > Advanced > Physical Address\n` +
+          `Or run in Command Prompt: ipconfig /all\n\n` +
+          `Enter it manually in the field above.`,
+        "error",
+      );
+    }
+  } catch (err) {
     showMessage(
-      "Note: MAC address auto-detection requires native application.",
-      "info",
+      `Connection error while detecting MAC.\n\n` +
+        `Please find your MAC address manually:\n` +
+        `Windows: open Command Prompt and run: ipconfig /all\n` +
+        `Look for "Physical Address" field.`,
+      "error",
     );
-
+    console.error("MAC detection error:", err);
+  } finally {
     detectMacBtn.disabled = false;
     detectMacBtn.innerHTML = '<i class="fas fa-bolt"></i>';
-  }, 500);
+  }
 });
 
 // Form Submission
@@ -91,7 +113,7 @@ registrationForm.addEventListener("submit", async (e) => {
     '<span style="display: inline-block; margin-right: 0.5rem;"><i class="fas fa-spinner fa-spin"></i></span>Registering...';
 
   try {
-    const res = await fetch("http://localhost:3000/api/users/register", {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/users/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,9 +151,11 @@ registrationForm.addEventListener("submit", async (e) => {
   } catch (err) {
     showMessage(
       "Network error: " +
-        (err.message || "Please check your connection and try again."),
+        (err.message || "Please check your connection and try again.") +
+        ` (Trying to reach: ${BACKEND_CONFIG.URL})`,
       "error",
     );
+    console.error("Registration error:", err);
   } finally {
     registerBtn.disabled = false;
     registerBtn.innerHTML =

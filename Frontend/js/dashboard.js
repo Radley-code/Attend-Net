@@ -384,7 +384,7 @@ async function fetchCoordinatorData() {
   try {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`http://localhost:3000/api/coordinator/me`, {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/coordinator/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -458,7 +458,7 @@ function loadCoordinatorInfo() {
 // Fetch and load available departments
 async function loadAvailableDepartments() {
   try {
-    const res = await fetch("http://localhost:3000/api/users/departments");
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/users/departments`);
     const data = await res.json();
 
     if (!res.ok || !data.departments) {
@@ -481,8 +481,8 @@ async function loadAvailableDepartments() {
       Law: "fa-gavel",
       Economics: "fa-chart-line",
       Psychology: "fa-brain",
-     "Medicine": "fa-dna",
-     "Agrobiotechnology": "fa-dna",
+      Medicine: "fa-dna",
+      Agrobiotechnology: "fa-dna",
       Chemistry: "fa-flask-vial",
       Physics: "fa-atom",
       Mathematics: "fa-calculator",
@@ -708,7 +708,7 @@ document.getElementById("sessionForm").addEventListener("submit", async (e) => {
       },
     });
 
-    const res = await fetch("http://localhost:3000/api/sessions/create", {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/sessions/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -795,7 +795,7 @@ document.getElementById("scanForm").addEventListener("submit", async (e) => {
     resultsContainer.innerHTML =
       '<div style="padding: 1rem; color: #0c5460; background: #d1ecf1; border-radius: 4px;">Scanning attendance...</div>';
 
-    const res = await fetch("http://localhost:3000/api/attendance/scan", {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/attendance/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, connectedMacs: macs }),

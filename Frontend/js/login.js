@@ -65,7 +65,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   loginBtn.innerHTML = '<span class="loading-spinner"></span>Logging in...';
 
   try {
-    const res = await fetch("http://localhost:3000/api/coordinator/login", {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/coordinator/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

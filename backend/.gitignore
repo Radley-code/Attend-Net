@@ -4,3 +4,6 @@ node_modules/
 *.log
 
 /build/createAdmin.js
+
+# Frontend node_modules
+Frontend/node_modules/

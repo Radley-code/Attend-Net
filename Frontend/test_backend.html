@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Backend Connection Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .test-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+      }
+      .test-item {
+        margin: 20px 0;
+        padding: 15px;
+        border-left: 4px solid #ccc;
+        background: #f9f9f9;
+      }
+      .test-item.success {
+        border-left-color: #28a745;
+        background: #e8f5e9;
+      }
+      .test-item.error {
+        border-left-color: #dc3545;
+        background: #ffebee;
+      }
+      .test-item.loading {
+        border-left-color: #ffc107;
+        background: #fff8e1;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        background: #f0f0f0;
+        padding: 10px;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>🧪 Backend Connection Test</h1>
+
+      <div class="test-item loading">
+        <strong>Your Device Info:</strong>
+        <div class="result" id="deviceInfo">Detecting...</div>
+      </div>
+
+      <div class="test-item">
+        <strong>Test 1: Backend Root Endpoint</strong>
+        <button onclick="testRoot()">Test Root (GET /)</button>
+        <div class="result" id="test1"></div>
+      </div>
+
+      <div class="test-item">
+        <strong>Test 2: User Registration Endpoint</strong>
+        <button onclick="testRegister()">
+          Test Register (GET /api/users/)
+        </button>
+        <div class="result" id="test2"></div>
+      </div>
+
+      <div class="test-item">
+        <strong>Test 3: MAC Detection Endpoint</strong>
+        <button onclick="testMacDetect()">
+          Test MAC Detect (GET /api/users/detect-mac)
+        </button>
+        <div class="result" id="test3"></div>
+      </div>
+
+      <div class="test-item">
+        <strong>Test 4: CORS Headers Check</strong>
+        <button onclick="testCORS()">Test CORS</button>
+        <div class="result" id="test4"></div>
+      </div>
+
+      <div class="test-item">
+        <strong>Configuration:</strong>
+        <div class="result" id="config"></div>
+      </div>
+    </div>
+
+    <script>
+      const BACKEND_URL = "http://192.168.1.101:3000";
+
+      // Detect device info
+      window.onload = function () {
+        const info = {
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          platform: navigator.platform,
+          onLine: navigator.onLine,
+          currentURL: window.location.href,
+          backendURL: BACKEND_URL,
+        };
+        document.getElementById("deviceInfo").textContent = JSON.stringify(
+          info,
+          null,
+          2,
+        );
+        document.getElementById("config").textContent =
+          `Backend URL: ${BACKEND_URL}\n\nMake sure:\n1. Backend is running on port 3000\n2. You're accessing this page from http://192.168.1.101:8080\n3. Both devices are on the same network`;
+      };
+
+      async function testRoot() {
+        const resultDiv = document.getElementById("test1");
+        resultDiv.innerHTML = "Testing...";
+        try {
+          const response = await fetch(`${BACKEND_URL}/`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          resultDiv.parentElement.className = "test-item success";
+          resultDiv.innerHTML = `✓ SUCCESS\nStatus: ${response.status}\nResponse: ${await response.text()}`;
+        } catch (err) {
+          resultDiv.parentElement.className = "test-item error";
+          resultDiv.innerHTML = `✗ FAILED\nError: ${err.message}`;
+        }
+      }
+
+      async function testRegister() {
+        const resultDiv = document.getElementById("test2");
+        resultDiv.innerHTML = "Testing...";
+        try {
+          const response = await fetch(`${BACKEND_URL}/api/users/`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          resultDiv.parentElement.className = "test-item success";
+          resultDiv.innerHTML = `✓ SUCCESS\nStatus: ${response.status}\nHeaders: CORS enabled`;
+        } catch (err) {
+          resultDiv.parentElement.className = "test-item error";
+          resultDiv.innerHTML = `✗ FAILED\nError: ${err.message}\nDouble-check backend is running!`;
+        }
+      }
+
+      async function testMacDetect() {
+        const resultDiv = document.getElementById("test3");
+        resultDiv.innerHTML = "Testing...";
+        try {
+          const response = await fetch(`${BACKEND_URL}/api/users/detect-mac`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          const data = await response.json();
+          resultDiv.parentElement.className = response.ok
+            ? "test-item success"
+            : "test-item error";
+          resultDiv.innerHTML = `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+        } catch (err) {
+          resultDiv.parentElement.className = "test-item error";
+          resultDiv.innerHTML = `✗ FAILED\nError: ${err.message}`;
+        }
+      }
+
+      async function testCORS() {
+        const resultDiv = document.getElementById("test4");
+        resultDiv.innerHTML = "Testing...";
+        try {
+          const response = await fetch(`${BACKEND_URL}/`, {
+            method: "OPTIONS",
+            headers: {
+              "Access-Control-Request-Method": "GET",
+              "Access-Control-Request-Headers": "Content-Type",
+            },
+          });
+          const corsHeaders = {
+            "Access-Control-Allow-Origin": response.headers.get(
+              "Access-Control-Allow-Origin",
+            ),
+            "Access-Control-Allow-Methods": response.headers.get(
+              "Access-Control-Allow-Methods",
+            ),
+            "Access-Control-Allow-Headers": response.headers.get(
+              "Access-Control-Allow-Headers",
+            ),
+          };
+          resultDiv.parentElement.className = corsHeaders[
+            "Access-Control-Allow-Origin"
+          ]
+            ? "test-item success"
+            : "test-item error";
+          resultDiv.innerHTML = `Status: ${response.status}\nCORS Headers: ${JSON.stringify(corsHeaders, null, 2)}`;
+        } catch (err) {
+          resultDiv.parentElement.className = "test-item error";
+          resultDiv.innerHTML = `✗ FAILED\nError: ${err.message}`;
+        }
+      }
+    </script>
+  </body>
+</html>

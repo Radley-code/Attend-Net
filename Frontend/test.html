@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    
+    <button onclick="testBackend()">Test Backend Connection</button>
+    <button onclick="testMACDetection()">Test MAC Detection</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        const BACKEND_URL = 'http://192.168.1.101:3000';
+        
+        async function testBackend() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing backend connection...';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/users/detect-mac`);
+                const data = await response.json();
+                result.innerHTML = `✅ Backend Connected! Response: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `❌ Backend Error: ${error.message}`;
+            }
+        }
+        
+        async function testMACDetection() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing MAC detection...';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/users/detect-mac`);
+                const data = await response.json();
+                result.innerHTML = `📍 MAC Detection Result: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `❌ MAC Detection Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -6,7 +6,14 @@ const cors = require("cors");
 const app = express();
 app.use(express.json());
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:8080", "http://192.168.1.101:8080"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Connect to MongoDB
 const uri = process.env.MONGODB_URI;
@@ -19,11 +26,6 @@ mongoose
 // Simple test route
 app.get("/", (req, res) => {
   res.send(" Server is running");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`AttendNet Server is running on port ${PORT}`);
 });
 
 // Import user routes
@@ -42,10 +44,19 @@ app.use("/api/attendance", attendanceRoutes);
 const loginRoutes = require("./routes/loginRoutes");
 app.use("/api/coordinator", loginRoutes);
 
-
-
 // Import admin routes
 const adminRoutes = require("./routes/adminRoutes");
 app.use("/api/admin", adminRoutes);
+
+const PORT = process.env.PORT || 3000;
+const HOST = "0.0.0.0"; // Listen on all network interfaces
+
+app.listen(PORT, HOST, () => {
+  console.log(`AttendNet Server is running on http://${HOST}:${PORT}`);
+  console.log(`Access from your network: http://192.168.1.101:${PORT}`);
+  console.log(
+    `Frontend should access backend at: http://192.168.1.101:${PORT}`,
+  );
+});
 
 module.exports = app;
