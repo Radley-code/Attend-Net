@@ -16,6 +16,57 @@
     <link rel="stylesheet" href="css/student-dark-theme.css" />
   </head>
   <body>
+    <!-- Custom Device Alert Modal -->
+    <div id="deviceAlertOverlay" class="device-alert-overlay hidden">
+      <div class="device-alert-modal">
+        <div class="device-alert-header">
+          <i class="fas fa-laptop"></i>
+          <h2>Important: Select Your Device</h2>
+          <button
+            id="deviceAlertClose"
+            class="device-alert-close"
+            aria-label="Close alert"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="device-alert-content">
+          <p class="device-alert-text">
+            <strong>⚠️ Before you proceed:</strong> Please ensure you are using
+            the device (laptop, tablet, or phone) that you will use daily for
+            attendance tracking.
+          </p>
+          <ul class="device-alert-list">
+            <li>
+              <i class="fas fa-check-circle"></i> Your MAC address will be
+              recorded from this device
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i> You can only register once per
+              device
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i> Attendance will be tracked
+              from this device only
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i> Do not share or transfer this
+              device during registration
+            </li>
+          </ul>
+          <p class="device-alert-warning">
+            Once registered, your MAC address cannot be changed without admin
+            intervention.
+          </p>
+        </div>
+        <div class="device-alert-footer">
+          <button id="deviceAlertDismiss" class="device-alert-btn">
+            <i class="fas fa-check"></i> I Understand, Continue
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Theme Toggle Button -->
     <button
       class="theme-toggle-student"
@@ -27,9 +78,17 @@
 
     <div class="registration-container">
       <!-- Header -->
-      <div class="registration-header">
+      <div class="registration-header"> 
+         <button
+          id="deviceAlertRetrigger"
+          class="device-info-btn"
+          title="Show device information"
+          aria-label="Show device information"
+        >
+          <i class="fas fa-info-circle"></i>
+        </button>
         <h1 class="header-title">Register Student</h1>
-        <div class="header-spacer"></div>
+      
       </div>
 
       <!-- Main Card -->
@@ -103,7 +162,10 @@
                 id="detectMacBtn"
                 title="Auto-detect device MAC address"
               >
-                <i class="fas fa-bolt"></i>
+                <div class="detect-btn">
+                  <i class="fas fa-bolt"></i>
+                  <p>click to detect your mac</p>
+                </div>
               </button>
             </label>
             <input
@@ -113,9 +175,14 @@
               class="form-control"
               placeholder="AA:BB:CC:DD:EE:FF"
               pattern="([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})"
+              aria-readonly="true"
+              readonly
+              title="MAC address is auto-detected and cannot be edited manually"
               required
             />
-            <small class="mac-hint">Format: AA:BB:CC:DD:EE:FF</small>
+            <small class="mac-hint"
+              >MAC address is auto-detected and unique to your device</small
+            >
           </div>
 
           <!-- Submit Button -->

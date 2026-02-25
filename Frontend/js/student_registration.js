@@ -1,3 +1,45 @@
+// Device Alert Modal
+const deviceAlertOverlay = document.getElementById("deviceAlertOverlay");
+const deviceAlertDismiss = document.getElementById("deviceAlertDismiss");
+const deviceAlertClose = document.getElementById("deviceAlertClose");
+const deviceAlertRetrigger = document.getElementById("deviceAlertRetrigger");
+
+// Function to show device alert
+function showDeviceAlert() {
+  deviceAlertOverlay.classList.remove("hidden");
+  deviceAlertOverlay.classList.add("show");
+}
+
+// Show device alert on every page load
+window.addEventListener("load", () => {
+  // Small delay for smoother appearance after page load
+  setTimeout(() => {
+    showDeviceAlert();
+  }, 300);
+});
+
+// Dismiss device alert (dismiss button)
+deviceAlertDismiss.addEventListener("click", () => {
+  deviceAlertOverlay.classList.remove("show");
+  deviceAlertOverlay.classList.add("hidden");
+});
+
+// Close device alert (X button)
+if (deviceAlertClose) {
+  deviceAlertClose.addEventListener("click", () => {
+    deviceAlertOverlay.classList.remove("show");
+    deviceAlertOverlay.classList.add("hidden");
+  });
+}
+
+// Re-trigger device alert (info icon in header)
+if (deviceAlertRetrigger) {
+  deviceAlertRetrigger.addEventListener("click", (e) => {
+    e.preventDefault();
+    showDeviceAlert();
+  });
+}
+
 // Theme Toggle
 const studentThemeToggle = document.getElementById("studentThemeToggle");
 
@@ -24,6 +66,9 @@ const registrationMessage = document.getElementById("registrationMessage");
 const registerBtn = document.getElementById("registerBtn");
 const macAddressInput = document.getElementById("macAddress");
 const detectMacBtn = document.getElementById("detectMacBtn");
+
+// Make MAC input readonly to prevent manual edits (security)
+if (macAddressInput) macAddressInput.readOnly = true;
 
 // Detect MAC Address
 detectMacBtn.addEventListener("click", async (e) => {
@@ -176,26 +221,7 @@ function showMessage(message, type) {
   }
 }
 
-// MAC Address input formatter (auto-format with colons)
-macAddressInput.addEventListener("input", (e) => {
-  let value = e.target.value.toUpperCase().replace(/[^0-9A-F]/g, "");
-
-  // Format as AA:BB:CC:DD:EE:FF
-  let formatted = "";
-  for (let i = 0; i < value.length; i++) {
-    if (i > 0 && i % 2 === 0) {
-      formatted += ":";
-    }
-    formatted += value[i];
-  }
-
-  // Limit to MAC address length
-  if (formatted.length > 17) {
-    formatted = formatted.substring(0, 17);
-  }
-
-  e.target.value = formatted;
-});
+// MAC formatting disabled — field is readonly to avoid manual spoofing
 
 // Email validation on blur
 document.getElementById("email").addEventListener("blur", (e) => {
