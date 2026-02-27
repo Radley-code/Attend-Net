@@ -119,32 +119,66 @@ function switchTab(tabName) {
   }
 }
 
-// Update Statistics
+// Update Statistics - loads from all active sessions unless specific sessionId passed
 function updateReportStats(sessionId) {
-  const saved = loadAttendanceResults(sessionId);
+  allRecords = [];
+  let totalPresent = 0;
+  let totalAbsent = 0;
 
-  if (saved && saved.presentArr && saved.absentArr) {
-    const presentCount = saved.presentArr.length;
-    const absentCount = saved.absentArr.length;
-    const totalCount = presentCount + absentCount;
-    const rate =
-      totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : 0;
-
-    document.getElementById("totalStudents").textContent = totalCount;
-    document.getElementById("totalPresent").textContent = presentCount;
-    document.getElementById("totalAbsent").textContent = absentCount;
-    document.getElementById("attendanceRate").textContent = rate + "%";
-
-    // Populate table
-    populateAttendanceTable(saved.presentArr, saved.absentArr);
+  if (sessionId) {
+    // Load single session
+    const saved = loadAttendanceResults(sessionId);
+    if (saved && saved.presentArr && saved.absentArr) {
+      totalPresent = saved.presentArr.length;
+      totalAbsent = saved.absentArr.length;
+      populateAttendanceTable(saved.presentArr, saved.absentArr);
+      return;
+    }
   } else {
-    document.getElementById("totalStudents").textContent = "0";
-    document.getElementById("totalPresent").textContent = "0";
-    document.getElementById("totalAbsent").textContent = "0";
-    document.getElementById("attendanceRate").textContent = "0%";
-    document.getElementById("attendanceTableBody").innerHTML =
-      '<tr><td colspan="6" style="text-align: center; color: #999">No attendance records found</td></tr>';
+    // Load from ALL active sessions in localStorage
+    if (
+      typeof currentSessions !== "undefined" &&
+      Array.isArray(currentSessions)
+    ) {
+      const now = new Date();
+      currentSessions.forEach((sess) => {
+        const dateString = (sess.date || "").split("T")[0];
+        const start = new Date(`${dateString}T${sess.startTime}`);
+        const end = new Date(`${dateString}T${sess.endTime}`);
+        const isActive = now >= start && now <= end;
+
+        if (isActive) {
+          const saved = loadAttendanceResults(sess._id);
+          if (saved && saved.presentArr && saved.absentArr) {
+            totalPresent += saved.presentArr.length;
+            totalAbsent += saved.absentArr.length;
+            populateAttendanceTable(saved.presentArr, saved.absentArr, true); // append mode
+          }
+        }
+      });
+    }
   }
+
+  // Update summary stats
+  const totalCount = totalPresent + totalAbsent;
+  const rate =
+    totalCount > 0 ? ((totalPresent / totalCount) * 100).toFixed(1) : 0;
+
+  document.getElementById("totalStudents").textContent = totalCount;
+  document.getElementById("totalPresent").textContent = totalPresent;
+  document.getElementById("totalAbsent").textContent = totalAbsent;
+  document.getElementById("attendanceRate").textContent = rate + "%";
+
+  if (totalCount === 0) {
+    document.getElementById("attendanceTableBody").innerHTML =
+      '<tr><td colspan="7" style="text-align: center; color: #999">No attendance records found</td></tr>';
+    return;
+  }
+
+  populateFilterDropdowns();
+  filteredRecords = [...allRecords];
+  currentPage = 1;
+  renderTablePage();
 }
 
 // Populate Attendance Table
@@ -153,15 +187,17 @@ let filteredRecords = [];
 let currentPage = 1;
 const recordsPerPage = 10;
 
-function populateAttendanceTable(presentArr, absentArr) {
-  allRecords = [];
+function populateAttendanceTable(presentArr, absentArr, appendMode = false) {
+  if (!appendMode) {
+    allRecords = [];
+  }
 
   presentArr.forEach((student) => {
     allRecords.push({
       name: student.name,
       department: student.department || "N/A",
       course: student.course || "N/A",
-      // for now use course as session label so filters remain sensible
+      sessionId: student.session || "",
       session: student.course || "",
       status: "Present",
       timestamp: new Date(student.timestamp).toLocaleString(),
@@ -181,6 +217,7 @@ function populateAttendanceTable(presentArr, absentArr) {
       name: student.name,
       department: student.department || "N/A",
       course: student.course || "N/A",
+      sessionId: student.session || "",
       session: student.course || "",
       status: "Absent",
       timestamp: new Date(student.timestamp).toLocaleString(),
@@ -195,52 +232,33 @@ function populateAttendanceTable(presentArr, absentArr) {
     });
   });
 
-  // Populate filter dropdowns
-  populateFilterDropdowns();
-
-  // Initialize filtered records with all records
-  filteredRecords = [...allRecords];
-
-  currentPage = 1;
-  renderTablePage();
+  if (!appendMode) {
+    populateFilterDropdowns();
+    filteredRecords = [...allRecords];
+    currentPage = 1;
+    renderTablePage();
+  }
 }
 
 // Populate Filter Dropdowns
 function populateFilterDropdowns() {
-  // Get unique courses
-  const courses = [
-    ...new Set(allRecords.map((r) => r.course).filter((c) => c !== "N/A")),
+  // Get unique active courses from records
+  const activeCourses = [
+    ...new Set(
+      allRecords.map((r) => r.course).filter((c) => c !== "N/A" && c !== ""),
+    ),
   ];
   const courseSelect = document.getElementById("filterCourse");
   const currentCourse = courseSelect.value;
 
   courseSelect.innerHTML = '<option value="">All Courses</option>';
-  courses.forEach((course) => {
+  activeCourses.forEach((course) => {
     const option = document.createElement("option");
     option.value = course;
     option.textContent = course;
     courseSelect.appendChild(option);
   });
   courseSelect.value = currentCourse;
-
-  // Get unique sessions (use label for display)
-  const sessionMap = {};
-  allRecords.forEach((r) => {
-    if (r.session && r.sessionLabel) {
-      sessionMap[r.session] = r.sessionLabel;
-    }
-  });
-  const sessionSelect = document.getElementById("filterSession");
-  const currentSession = sessionSelect.value;
-
-  sessionSelect.innerHTML = '<option value="">All Sessions</option>';
-  Object.entries(sessionMap).forEach(([id, label]) => {
-    const option = document.createElement("option");
-    option.value = id;
-    option.textContent = label;
-    sessionSelect.appendChild(option);
-  });
-  sessionSelect.value = currentSession;
 }
 
 function renderTablePage() {
@@ -918,6 +936,7 @@ async function loadCoordinatorSessions() {
     if (!res.ok) throw new Error("Failed to fetch sessions");
     const data = await res.json();
     const sessions = data.sessions || [];
+    currentSessions = sessions; // Store globally for report aggregation
     renderSessionList(sessions);
   } catch (err) {
     console.error("Error loading sessions:", err);
@@ -927,7 +946,7 @@ async function loadCoordinatorSessions() {
   }
 }
 
-// render sessions into upcoming / active / ended sections
+// render sessions into upcoming / active / ended sections with "see more" for non-active
 function renderSessionList(sessions) {
   const upcomingDiv = document.getElementById("upcomingSessions");
   const activeDiv = document.getElementById("activeSessions");
@@ -937,8 +956,12 @@ function renderSessionList(sessions) {
   endedDiv.innerHTML = "";
 
   const now = new Date();
+  const upcoming = [];
+  const active = [];
+  const ended = [];
+
   sessions.forEach((s) => {
-    const dateString = s.date.split("T")[0] || s.date;
+    const dateString = (s.date || "").split("T")[0];
     const start = new Date(`${dateString}T${s.startTime}`);
     const end = new Date(`${dateString}T${s.endTime}`);
     const status =
@@ -949,42 +972,105 @@ function renderSessionList(sessions) {
           ? "upcoming"
           : "ended");
 
-    const card = document.createElement("div");
-    card.className = "session-card";
-    card.style =
-      "border:1px solid #ccc; padding:0.75rem; margin-bottom:0.75rem; border-radius:4px; background:#fff;";
-    card.innerHTML = `
-      <div><strong>${s.course}</strong> (${dateString})</div>
-      <div>Time: ${s.startTime} - ${s.endTime}</div>
-      <div>Interval: ${s.interval || 0} min</div>
-      <div>Departments: ${s.departments.join(", ")}</div>
-      <div>Status: <span style="font-weight:600;">${status}</span></div>
-    `;
-
-    // add action button for manual scans when active
-    const actions = document.createElement("div");
-    actions.style = "margin-top:0.5rem;";
-    if (status === "active") {
-      const btn = document.createElement("button");
-      btn.className = "btn-custom btn-primary-custom";
-      btn.textContent = "Scan";
-      btn.addEventListener("click", () => scanSession(s._id));
-      actions.appendChild(btn);
-    }
-    card.appendChild(actions);
-
     if (status === "upcoming") {
-      upcomingDiv.appendChild(card);
+      upcoming.push({ session: s, status });
     } else if (status === "active") {
-      activeDiv.appendChild(card);
-    } else if (status === "ended") {
-      endedDiv.appendChild(card);
+      active.push({ session: s, status });
+    } else {
+      ended.push({ session: s, status });
     }
   });
+
+  // Render active sessions (always full display)
+  active.forEach((item) => {
+    activeDiv.appendChild(createSessionCard(item.session, item.status));
+  });
+
+  // Render upcoming sessions with "see more" if needed
+  const upcomingLimit = 2;
+  renderSectionWithSeeMore(
+    upcomingDiv,
+    upcoming,
+    "upcomingSessions",
+    upcomingLimit,
+  );
+
+  // Render ended sessions with "see more" if needed
+  const endedLimit = 2;
+  renderSectionWithSeeMore(endedDiv, ended, "endedSessions", endedLimit);
+}
+
+function createSessionCard(s, status) {
+  const dateString = (s.date || "").split("T")[0];
+  const card = document.createElement("div");
+  card.className = "session-card";
+  card.style =
+    "border:1px solid #ccc; padding:0.75rem; margin-bottom:0.75rem; border-radius:4px; background:#fff;";
+  card.innerHTML = `
+    <div><strong>${s.course}</strong> (${dateString})</div>
+    <div>Time: ${s.startTime} - ${s.endTime}</div>
+    <div>Interval: ${s.interval || 0} min</div>
+    <div>Departments: ${s.departments.join(", ")}</div>
+    <div>Status: <span style="font-weight:600;">${status}</span></div>
+  `;
+
+  // add action button for manual scans when active
+  const actions = document.createElement("div");
+  actions.style = "margin-top:0.5rem;";
+  if (status === "active") {
+    const btn = document.createElement("button");
+    btn.className = "btn-custom btn-primary-custom";
+    btn.textContent = "Scan";
+    btn.addEventListener("click", () => scanSession(s._id));
+    actions.appendChild(btn);
+  }
+  card.appendChild(actions);
+  return card;
+}
+
+function renderSectionWithSeeMore(container, items, sectionId, limit) {
+  if (items.length === 0) return;
+
+  const shown = items.slice(0, limit);
+  const hidden = items.slice(limit);
+
+  shown.forEach((item) => {
+    container.appendChild(createSessionCard(item.session, item.status));
+  });
+
+  if (hidden.length > 0) {
+    const seeMoreDiv = document.createElement("div");
+    seeMoreDiv.style = "text-align:center; margin-top:0.5rem;";
+    const toggle = document.createElement("button");
+    toggle.className = "btn-custom btn-secondary-custom";
+    toggle.textContent = `See More (${hidden.length} more)`;
+    toggle.style = "font-size:0.9rem; padding:0.4rem 0.8rem;";
+
+    const hiddenContainer = document.createElement("div");
+    hiddenContainer.id = `${sectionId}_hidden`;
+    hiddenContainer.style = "display:none;";
+
+    hidden.forEach((item) => {
+      hiddenContainer.appendChild(createSessionCard(item.session, item.status));
+    });
+
+    toggle.addEventListener("click", () => {
+      const isVisible = hiddenContainer.style.display !== "none";
+      hiddenContainer.style.display = isVisible ? "none" : "block";
+      toggle.textContent = isVisible
+        ? `See More (${hidden.length} more)`
+        : "See Less";
+    });
+
+    seeMoreDiv.appendChild(toggle);
+    container.appendChild(hiddenContainer);
+    container.appendChild(seeMoreDiv);
+  }
 }
 
 // socket variable
 let socket = null;
+let currentSessions = []; // Track all sessions for report aggregation
 
 // Initialize on page load
 window.addEventListener("DOMContentLoaded", () => {

@@ -18,22 +18,70 @@ async function performScanForSession(session, connectedMacs = []) {
     throw new Error("Session has already ended");
   }
 
-  // if no macs provided, attempt ARP lookup
+  // if no macs provided, attempt multiple ARP/network lookups
   if (!Array.isArray(connectedMacs)) connectedMacs = [];
   if (connectedMacs.length === 0) {
     try {
       const { execSync } = require("child_process");
-      const arpOutput = execSync("arp -a", { encoding: "utf-8" });
+      const found = new Set();
       const macRegex = /([0-9a-f]{2}[-:]){5}[0-9a-f]{2}/gi;
-      const found = [];
-      let m;
-      while ((m = macRegex.exec(arpOutput))) {
-        found.push(m[0].replace(/-/g, ":").toUpperCase());
+
+      // Method 1: Traditional ARP scan
+      try {
+        const arpOutput = execSync("arp -a", { encoding: "utf-8" });
+        let m;
+        while ((m = macRegex.exec(arpOutput))) {
+          found.add(m[0].replace(/-/g, ":").toUpperCase());
+        }
+      } catch (e) {
+        console.log("ARP method 1 failed", e.message);
       }
-      connectedMacs = [...new Set(found)];
-      console.log("Auto-detected MAC addresses from ARP:", connectedMacs);
+
+      // Method 2: Windows Get-NetNeighbor (PowerShell) - most comprehensive
+      try {
+        const psCmd =
+          'powershell -Command "Get-NetNeighbor -AddressFamily IPv4 -State Reachable | Select-Object -ExpandProperty LinkLayerAddress"';
+        const psOutput = execSync(psCmd, { encoding: "utf-8" });
+        const lines = psOutput.split("\n");
+        lines.forEach((line) => {
+          const mac = line.trim().replace(/-/g, ":").toUpperCase();
+          if (macRegex.test(mac)) {
+            found.add(mac);
+          }
+        });
+      } catch (e) {
+        console.log("PowerShell Get-NetNeighbor method failed", e.message);
+      }
+
+      // Method 3: netstat (may show MAC in some configurations)
+      try {
+        const netstatOutput = execSync("netstat -an", { encoding: "utf-8" });
+        let m;
+        while ((m = macRegex.exec(netstatOutput))) {
+          found.add(m[0].replace(/-/g, ":").toUpperCase());
+        }
+      } catch (e) {
+        console.log("Netstat method failed", e.message);
+      }
+
+      // Method 4: ipconfig (parse MAC addresses from network interfaces)
+      try {
+        const ipconfigOutput = execSync("ipconfig /all", { encoding: "utf-8" });
+        let m;
+        while ((m = macRegex.exec(ipconfigOutput))) {
+          found.add(m[0].replace(/-/g, ":").toUpperCase());
+        }
+      } catch (e) {
+        console.log("ipconfig method failed", e.message);
+      }
+
+      connectedMacs = Array.from(found);
+      console.log(
+        `Auto-detected ${connectedMacs.length} MAC addresses from network:`,
+        connectedMacs,
+      );
     } catch (arpErr) {
-      console.log("Automatic ARP scan failed", arpErr.message);
+      console.log("Network scan failed", arpErr.message);
     }
   }
 
@@ -188,8 +236,6 @@ const scanAttendance = async (req, res) => {
       .json({ message: "Server error during attendance scanning" });
   }
 };
-
-module.exports = { scanAttendance };
 
 // Debug: return all attendance records for a session (populated)
 const debugAttendanceForSession = async (req, res) => {
