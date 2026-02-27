@@ -17,6 +17,15 @@ const attendanceSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  // counters to track multiple scans within a session
+  presentCount: {
+    type: Number,
+    default: 0,
+  },
+  totalScans: {
+    type: Number,
+    default: 0,
+  },
   status: {
     type: String,
     enum: ["present", "absent"],

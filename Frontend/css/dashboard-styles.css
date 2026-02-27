@@ -198,7 +198,28 @@ body.dark-theme {
   color: #333;
   text-decoration: none;
   border-bottom: 1px solid #e0e0e0;
-  transition: all 0.3s ease;
+}
+
+/* radio group for scan mode selection */
+.radio-group {
+  display: flex;
+  align-items: center;
+}
+.radio-group label {
+  font-size: 0.9rem;
+}
+.radio-group input[type="radio"] {
+  margin-right: 0.3rem;
+}
+
+/* simple card style for sessions list */
+.session-card {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.session-card .btn-custom {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
 }
 
 .dropdown-item:last-child {
@@ -298,7 +319,11 @@ body.dark-theme {
 
 /* Welcome Section */
 .welcome-section {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.08) 0%,
+    rgba(118, 75, 162, 0.08) 100%
+  );
   padding: 2rem;
   border-radius: 12px;
   margin-bottom: 2rem;
@@ -311,7 +336,9 @@ body.dark-theme {
   color: #667eea;
   margin-bottom: 1rem;
   display: inline-block;
-  animation: wave 1s ease-in-out 0.3s, fadeIn 0.6s ease-out;
+  animation:
+    wave 1s ease-in-out 0.3s,
+    fadeIn 0.6s ease-out;
 }
 
 .welcome-message {
@@ -346,7 +373,8 @@ body.dark-theme {
 }
 
 @keyframes wave {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(0deg);
     transform-origin: 70% 70%;
   }
@@ -768,7 +796,8 @@ tbody tr:hover {
     font-size: 0.85rem;
   }
 
-  th, td {
+  th,
+  td {
     padding: 0.5rem;
   }
 
@@ -790,96 +819,97 @@ tbody tr:hover {
     font-size: 0.9rem;
   }
 
-@media (max-width: 480px) {
-  .navbar-custom {
-    padding: 0.75rem 1rem;
-  }
+  @media (max-width: 480px) {
+    .navbar-custom {
+      padding: 0.75rem 1rem;
+    }
 
-  .navbar-left {
-    gap: 0.5rem;
-  }
+    .navbar-left {
+      gap: 0.5rem;
+    }
 
-  .page-title {
-    font-size: 1.25rem;
-  }
+    .page-title {
+      font-size: 1.25rem;
+    }
 
-  .stats-container {
-    grid-template-columns: 1fr;
-  }
+    .stats-container {
+      grid-template-columns: 1fr;
+    }
 
-  .stat-card {
-    padding: 1rem;
-  }
+    .stat-card {
+      padding: 1rem;
+    }
 
-  .stat-value {
-    font-size: 1.5rem;
-  }
+    .stat-value {
+      font-size: 1.5rem;
+    }
 
-  .stat-label {
-    font-size: 0.8rem;
-  }
+    .stat-label {
+      font-size: 0.8rem;
+    }
 
-  .filter-section {
-    padding: 1rem;
-  }
+    .filter-section {
+      padding: 1rem;
+    }
 
-  .table-responsive {
-    font-size: 0.75rem;
-  }
+    .table-responsive {
+      font-size: 0.75rem;
+    }
 
-  table {
-    font-size: 0.75rem;
-  }
+    table {
+      font-size: 0.75rem;
+    }
 
-  th, td {
-    padding: 0.4rem;
-  }
+    th,
+    td {
+      padding: 0.4rem;
+    }
 
-  .pagination-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-  }
+    .pagination-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
 
-  .coordinator-name {
-    font-size: 0.75rem;
-  }
+    .coordinator-name {
+      font-size: 0.75rem;
+    }
 
-  .coordinator-email {
-    font-size: 0.65rem;
-  }
+    .coordinator-email {
+      font-size: 0.65rem;
+    }
 
-  .profile-avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 0.9rem;
-  }
+    .profile-avatar {
+      width: 32px;
+      height: 32px;
+      font-size: 0.9rem;
+    }
 
-  .profile-menu-btn {
-    padding: 0.25rem;
-  }
+    .profile-menu-btn {
+      padding: 0.25rem;
+    }
 
-  .theme-toggle {
-    padding: 0.25rem;
-    width: 36px;
-    height: 36px;
-  }
+    .theme-toggle {
+      padding: 0.25rem;
+      width: 36px;
+      height: 36px;
+    }
 
-  .welcome-section {
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
+    .welcome-section {
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
 
-  .welcome-icon {
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-  }
+    .welcome-icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
 
-  .welcome-message {
-    font-size: 1.2rem;
-  }
+    .welcome-message {
+      font-size: 1.2rem;
+    }
 
-  .welcome-subtitle {
-    font-size: 0.85rem;
+    .welcome-subtitle {
+      font-size: 0.85rem;
+    }
   }
-}
 }

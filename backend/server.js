@@ -15,12 +15,52 @@ app.use(
   }),
 );
 
-// Connect to MongoDB
+// Connect to MongoDB and start server afterwards
 const uri = process.env.MONGODB_URI;
+
+// socket integration dependencies (used later)
+const http = require("http");
+const { Server } = require("socket.io");
+const { setIO } = require("./utils/socket");
+const { initSchedules } = require("./utils/sessionScheduler");
 
 mongoose
   .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB connected"))
+  .then(() => {
+    console.log("MongoDB connected");
+
+    // create http and socket servers only after DB is ready
+    const server = http.createServer(app);
+    const io = new Server(server, {
+      cors: {
+        origin: ["http://localhost:8080", "http://192.168.1.101:8080"],
+        methods: ["GET", "POST"],
+      },
+    });
+    setIO(io);
+
+    io.on("connection", (socket) => {
+      console.log("socket connected", socket.id);
+      socket.on("join", (data) => {
+        if (data && data.coordinatorId) {
+          socket.join(`coordinator_${data.coordinatorId}`);
+        }
+      });
+    });
+
+    const PORT = process.env.PORT || 3000;
+    const HOST = "0.0.0.0"; // Listen on all network interfaces
+
+    server.listen(PORT, HOST, () => {
+      console.log(`AttendNet Server is running on http://${HOST}:${PORT}`);
+      console.log(`Access from your network: http://192.168.1.101:${PORT}`);
+      console.log(
+        `Frontend should access backend at: http://192.168.1.101:${PORT}`,
+      );
+      // initialize schedules after server starts
+      initSchedules();
+    });
+  })
   .catch((err) => console.error("Connection error:", err));
 
 // Simple test route
@@ -47,16 +87,5 @@ app.use("/api/coordinator", loginRoutes);
 // Import admin routes
 const adminRoutes = require("./routes/adminRoutes");
 app.use("/api/admin", adminRoutes);
-
-const PORT = process.env.PORT || 3000;
-const HOST = "0.0.0.0"; // Listen on all network interfaces
-
-app.listen(PORT, HOST, () => {
-  console.log(`AttendNet Server is running on http://${HOST}:${PORT}`);
-  console.log(`Access from your network: http://192.168.1.101:${PORT}`);
-  console.log(
-    `Frontend should access backend at: http://192.168.1.101:${PORT}`,
-  );
-});
 
 module.exports = app;

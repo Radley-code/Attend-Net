@@ -1,4 +1,4 @@
-// Helper functions for localStorage
+// Helper functions for localStorage tied to session
 function getCoordinatorId() {
   return localStorage.getItem("coordinatorId") || "default";
 }
@@ -7,21 +7,21 @@ function getCoordinatorName() {
   return localStorage.getItem("coordinatorName") || "Coordinator";
 }
 
-function getAttendanceKey() {
-  return `attendanceResults_${getCoordinatorId()}`;
+function getAttendanceKey(sessionId) {
+  return `attendanceResults_${getCoordinatorId()}_${sessionId || "latest"}`;
 }
 
-function saveAttendanceResults(results) {
-  localStorage.setItem(getAttendanceKey(), JSON.stringify(results));
+function saveAttendanceResults(sessionId, results) {
+  localStorage.setItem(getAttendanceKey(sessionId), JSON.stringify(results));
 }
 
-function loadAttendanceResults() {
-  const saved = localStorage.getItem(getAttendanceKey());
+function loadAttendanceResults(sessionId) {
+  const saved = localStorage.getItem(getAttendanceKey(sessionId));
   return saved ? JSON.parse(saved) : null;
 }
 
-function clearAttendanceResults() {
-  localStorage.removeItem(getAttendanceKey());
+function clearAttendanceResults(sessionId) {
+  localStorage.removeItem(getAttendanceKey(sessionId));
 }
 
 // Theme Toggle
@@ -113,11 +113,15 @@ function switchTab(tabName) {
   if (tabName === "reports") {
     updateReportStats();
   }
+
+  if (tabName === "sessions") {
+    loadCoordinatorSessions();
+  }
 }
 
 // Update Statistics
-function updateReportStats() {
-  const saved = loadAttendanceResults();
+function updateReportStats(sessionId) {
+  const saved = loadAttendanceResults(sessionId);
 
   if (saved && saved.presentArr && saved.absentArr) {
     const presentCount = saved.presentArr.length;
@@ -157,8 +161,18 @@ function populateAttendanceTable(presentArr, absentArr) {
       name: student.name,
       department: student.department || "N/A",
       course: student.course || "N/A",
+      // for now use course as session label so filters remain sensible
+      session: student.course || "",
       status: "Present",
       timestamp: new Date(student.timestamp).toLocaleString(),
+      scans:
+        student.totalScans != null
+          ? `${student.presentCount || 0}/${student.totalScans}`
+          : "",
+      rate:
+        student.totalScans > 0
+          ? ((student.presentCount / student.totalScans) * 100).toFixed(1) + "%"
+          : "",
     });
   });
 
@@ -167,8 +181,17 @@ function populateAttendanceTable(presentArr, absentArr) {
       name: student.name,
       department: student.department || "N/A",
       course: student.course || "N/A",
+      session: student.course || "",
       status: "Absent",
       timestamp: new Date(student.timestamp).toLocaleString(),
+      scans:
+        student.totalScans != null
+          ? `${student.presentCount || 0}/${student.totalScans}`
+          : "",
+      rate:
+        student.totalScans > 0
+          ? ((student.presentCount / student.totalScans) * 100).toFixed(1) + "%"
+          : "",
     });
   });
 
@@ -200,18 +223,21 @@ function populateFilterDropdowns() {
   });
   courseSelect.value = currentCourse;
 
-  // Get unique sessions
-  const sessions = [
-    ...new Set(allRecords.map((r) => r.session).filter((s) => s !== "N/A")),
-  ];
+  // Get unique sessions (use label for display)
+  const sessionMap = {};
+  allRecords.forEach((r) => {
+    if (r.session && r.sessionLabel) {
+      sessionMap[r.session] = r.sessionLabel;
+    }
+  });
   const sessionSelect = document.getElementById("filterSession");
   const currentSession = sessionSelect.value;
 
   sessionSelect.innerHTML = '<option value="">All Sessions</option>';
-  sessions.forEach((session) => {
+  Object.entries(sessionMap).forEach(([id, label]) => {
     const option = document.createElement("option");
-    option.value = session;
-    option.textContent = session;
+    option.value = id;
+    option.textContent = label;
     sessionSelect.appendChild(option);
   });
   sessionSelect.value = currentSession;
@@ -222,7 +248,7 @@ function renderTablePage() {
 
   if (filteredRecords.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="5" style="text-align: center; color: #999">No attendance records found</td></tr>';
+      '<tr><td colspan="7" style="text-align: center; color: #999">No attendance records found</td></tr>';
     document.getElementById("pageInfo").textContent = "Page 1";
     document.getElementById("prevBtn").disabled = true;
     document.getElementById("nextBtn").disabled = true;
@@ -240,6 +266,8 @@ function renderTablePage() {
       <td>${record.name}</td>
       <td>${record.department}</td>
       <td>${record.course}</td>
+      <td>${record.scans || ""}</td>
+      <td>${record.rate || ""}</td>
       <td><span class="status-${record.status.toLowerCase()}">${record.status}</span></td>
       <td>${record.timestamp}</td>
     </tr>
@@ -290,7 +318,7 @@ function applyFilters() {
       match = match && record.course === filterCourse;
     }
 
-    // Session filter
+    // Session filter (compare id)
     if (filterSession) {
       match = match && record.session === filterSession;
     }
@@ -588,6 +616,9 @@ document.getElementById("sessionForm").addEventListener("submit", async (e) => {
   const startTime = document.getElementById("startTime").value;
   const endTime = document.getElementById("endTime").value;
   const departmentsField = document.getElementById("departments").value;
+  // scan mode radio buttons
+  const scanModeEl = document.querySelector('input[name="scanMode"]:checked');
+  const scanMode = scanModeEl ? scanModeEl.value : "manual";
 
   // Validate all fields
   if (!course) {
@@ -708,13 +739,24 @@ document.getElementById("sessionForm").addEventListener("submit", async (e) => {
       },
     });
 
+    // parse interval field (minutes)
+    const intervalVal = parseInt(document.getElementById("interval").value, 10);
+    const interval = isNaN(intervalVal) || intervalVal < 0 ? 0 : intervalVal;
+
     const res = await fetch(`${BACKEND_CONFIG.URL}/api/sessions/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ course, date, startTime, endTime, departments }),
+      body: JSON.stringify({
+        course,
+        date,
+        startTime,
+        endTime,
+        departments,
+        interval,
+      }),
     });
 
     const data = await res.json();
@@ -733,6 +775,8 @@ document.getElementById("sessionForm").addEventListener("submit", async (e) => {
       document.getElementById("sessionForm").reset();
       document.getElementById("selectedText").textContent =
         "Select departments...";
+      // refresh list so the new session shows up immediately
+      loadCoordinatorSessions();
     });
   } catch (err) {
     console.error("Session create error:", err);
@@ -749,120 +793,89 @@ document.getElementById("sessionForm").addEventListener("submit", async (e) => {
   }
 });
 
-// Scan Form Handler
-document.getElementById("scanForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const sessionId = document.getElementById("sessionId").value.trim();
-  const macs = document.getElementById("macs").value
-    ? document
-        .getElementById("macs")
-        .value.split(",")
-        .map((m) => m.trim())
-    : [];
+// replaced old scan form handler with new helper functions
+
+// helper to send scan request (always network-based)
+async function scanSession(sessionId) {
   const resultsContainer = document.getElementById("resultsContainer");
-  const submitBtn = document.querySelector('#scanForm button[type="submit"]');
-
-  if (!sessionId) {
-    Swal.fire({
-      icon: "warning",
-      title: "Missing Session ID",
-      text: "Please provide a session ID",
-      confirmButtonColor: "#1976d2",
-      customClass: {
-        container: "swal-container",
-        popup: "swal-popup",
-      },
-    });
-    return;
-  }
-
-  if (macs.length === 0) {
-    Swal.fire({
-      icon: "warning",
-      title: "Missing MAC Addresses",
-      text: "Please provide at least one MAC address",
-      confirmButtonColor: "#1976d2",
-      customClass: {
-        container: "swal-container",
-        popup: "swal-popup",
-      },
-    });
-    return;
-  }
-
   try {
-    submitBtn && (submitBtn.disabled = true);
+    // show interim message
     resultsContainer.innerHTML =
       '<div style="padding: 1rem; color: #0c5460; background: #d1ecf1; border-radius: 4px;">Scanning attendance...</div>';
 
+    const token = localStorage.getItem("token");
     const res = await fetch(`${BACKEND_CONFIG.URL}/api/attendance/scan`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, connectedMacs: macs }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ sessionId }),
     });
 
     const data = await res.json();
-    console.log("scan response raw:", data, "status:", res.status);
-    console.log(
-      "Present data sample:",
-      data.present ? data.present[0] : "no present",
-    );
-    console.log(
-      "Absent data sample:",
-      data.absent ? data.absent[0] : "no absent",
-    );
     if (!res.ok)
       throw new Error((data && data.message) || "Attendance scan failed");
 
-    // Ensure arrays
-    const presentArr = Array.isArray(data && data.present) ? data.present : [];
-    const absentArr = Array.isArray(data && data.absent) ? data.absent : [];
+    const presentArr = Array.isArray(data.present) ? data.present : [];
+    const absentArr = Array.isArray(data.absent) ? data.absent : [];
+    const counts = data.counts || {
+      total: presentArr.length + absentArr.length,
+      present: presentArr.length,
+      absent: absentArr.length,
+    };
 
-    const counts =
-      data && data.counts
-        ? data.counts
-        : {
-            total: presentArr.length + absentArr.length,
-            present: presentArr.length,
-            absent: absentArr.length,
-          };
-
-    // Save to localStorage
-    saveAttendanceResults({ presentArr, absentArr, counts });
-
-    // Render results
+    saveAttendanceResults(sessionId, { presentArr, absentArr, counts });
     renderScanResults(presentArr, absentArr, counts);
+    // update reports view if open
+    updateReportStats(sessionId);
+    return { presentArr, absentArr, counts };
   } catch (err) {
     console.error("Scan error:", err);
     resultsContainer.innerHTML = `<div style="padding: 1rem; color: #721c24; background: #f8d7da; border-radius: 4px;">Error: ${err.message || err}</div>`;
-  } finally {
-    submitBtn && (submitBtn.disabled = false);
+    throw err;
   }
-});
+}
 
 function renderScanResults(presentArr, absentArr, counts) {
   const resultsContainer = document.getElementById("resultsContainer");
 
   const presentHtml =
     presentArr
-      .map(
-        (p) => `
+      .map((p) => {
+        const extra =
+          p.totalScans != null
+            ? ` <small>(${p.presentCount}/${p.totalScans} scans, ${
+                p.totalScans > 0
+                  ? ((p.presentCount / p.totalScans) * 100).toFixed(1) + "%"
+                  : "0%"
+              })</small>`
+            : "";
+        return `
     <div style="border: 1px solid #ddd; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 4px;">
-      <strong>${p.name}</strong> (${p.department}) — <span style="color: #28a745; font-weight: 600;">${p.status}</span>
+      <strong>${p.name}</strong> (${p.department}) — <span style="color: #28a745; font-weight: 600;">${p.status}</span>${extra}
     </div>
-  `,
-      )
+  `;
+      })
       .join("") || '<div style="color: #999;">No present students</div>';
 
   const absentHtml =
     absentArr
-      .map(
-        (a) => `
+      .map((a) => {
+        const extra =
+          a.totalScans != null
+            ? ` <small>(${a.presentCount}/${a.totalScans} scans, ${
+                a.totalScans > 0
+                  ? ((a.presentCount / a.totalScans) * 100).toFixed(1) + "%"
+                  : "0%"
+              })</small>`
+            : "";
+        return `
     <div style="border: 1px solid #ddd; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 4px;">
-      <strong>${a.name}</strong> (${a.department}) — <span style="color: #dc3545; font-weight: 600;">${a.status}</span>
+      <strong>${a.name}</strong> (${a.department}) — <span style="color: #dc3545; font-weight: 600;">${a.status}</span>${extra}
     </div>
-  `,
-      )
+  `;
+      })
       .join("") || '<div style="color: #999;">No absent students</div>';
 
   resultsContainer.innerHTML = `
@@ -891,10 +904,138 @@ function clearScanDisplay() {
   document.getElementById("resultsContainer").innerHTML = "";
 }
 
+// load sessions owned by the logged in coordinator
+async function loadCoordinatorSessions() {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/sessions/mine`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) throw new Error("Failed to fetch sessions");
+    const data = await res.json();
+    const sessions = data.sessions || [];
+    renderSessionList(sessions);
+  } catch (err) {
+    console.error("Error loading sessions:", err);
+    const container = document.getElementById("sessionListContainer");
+    if (container)
+      container.innerHTML = `<p style="color:#c00;">Could not load sessions.</p>`;
+  }
+}
+
+// render sessions into upcoming / active / ended sections
+function renderSessionList(sessions) {
+  const upcomingDiv = document.getElementById("upcomingSessions");
+  const activeDiv = document.getElementById("activeSessions");
+  const endedDiv = document.getElementById("endedSessions");
+  upcomingDiv.innerHTML = "";
+  activeDiv.innerHTML = "";
+  endedDiv.innerHTML = "";
+
+  const now = new Date();
+  sessions.forEach((s) => {
+    const dateString = s.date.split("T")[0] || s.date;
+    const start = new Date(`${dateString}T${s.startTime}`);
+    const end = new Date(`${dateString}T${s.endTime}`);
+    const status =
+      s.status ||
+      (now >= start && now <= end
+        ? "active"
+        : now < start
+          ? "upcoming"
+          : "ended");
+
+    const card = document.createElement("div");
+    card.className = "session-card";
+    card.style =
+      "border:1px solid #ccc; padding:0.75rem; margin-bottom:0.75rem; border-radius:4px; background:#fff;";
+    card.innerHTML = `
+      <div><strong>${s.course}</strong> (${dateString})</div>
+      <div>Time: ${s.startTime} - ${s.endTime}</div>
+      <div>Interval: ${s.interval || 0} min</div>
+      <div>Departments: ${s.departments.join(", ")}</div>
+      <div>Status: <span style="font-weight:600;">${status}</span></div>
+    `;
+
+    // add action button for manual scans when active
+    const actions = document.createElement("div");
+    actions.style = "margin-top:0.5rem;";
+    if (status === "active") {
+      const btn = document.createElement("button");
+      btn.className = "btn-custom btn-primary-custom";
+      btn.textContent = "Scan";
+      btn.addEventListener("click", () => scanSession(s._id));
+      actions.appendChild(btn);
+    }
+    card.appendChild(actions);
+
+    if (status === "upcoming") {
+      upcomingDiv.appendChild(card);
+    } else if (status === "active") {
+      activeDiv.appendChild(card);
+    } else if (status === "ended") {
+      endedDiv.appendChild(card);
+    }
+  });
+}
+
+// socket variable
+let socket = null;
+
 // Initialize on page load
 window.addEventListener("DOMContentLoaded", () => {
   fetchCoordinatorData();
   loadCoordinatorInfo();
   updateReportStats();
   loadAvailableDepartments();
+  initSocket();
 });
+
+function initSocket() {
+  if (typeof io === "undefined") {
+    console.warn("socket.io client not loaded");
+    return;
+  }
+  socket = io(BACKEND_CONFIG.URL);
+  socket.on("connect", () => {
+    console.log("socket connected");
+    socket.emit("join", { coordinatorId: getCoordinatorId() });
+  });
+
+  socket.on("sessionStarted", (session) => {
+    console.log("sessionStarted event", session);
+    loadCoordinatorSessions();
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: `Session started: ${session.course}`,
+      showConfirmButton: false,
+      timer: 2000,
+    });
+  });
+
+  socket.on("scanResult", (data) => {
+    console.log("scanResult event", data);
+    // persist results
+    saveAttendanceResults(data.sessionId, {
+      presentArr: data.present,
+      absentArr: data.absent,
+      counts: data.counts,
+    });
+    // update reports view if open
+    updateReportStats(data.sessionId);
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "success",
+      title: `Scan done for ${data.course} at ${new Date(data.timestamp).toLocaleTimeString()}`,
+      showConfirmButton: false,
+      timer: 2000,
+    });
+  });
+}

@@ -193,13 +193,15 @@
                     <th>Student Name</th>
                     <th>Department</th>
                     <th>Course</th>
+                    <th>Scans</th>
+                    <th>Rate</th>
                     <th>Status</th>
                     <th>Timestamp</th>
                   </tr>
                 </thead>
                 <tbody id="attendanceTableBody">
                   <tr>
-                    <td colspan="6" style="text-align: center; color: #999">
+                    <td colspan="7" style="text-align: center; color: #999">
                       No attendance records found
                     </td>
                   </tr>
@@ -232,22 +234,21 @@
                     type="text"
                     id="course"
                     placeholder="e.g., Mathematics I"
-                    
                   />
                 </div>
                 <div class="form-group">
                   <label for="date">Date</label>
-                  <input type="date" id="date"  />
+                  <input type="date" id="date" />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label for="startTime">Start Time</label>
-                  <input type="time" id="startTime"  />
+                  <input type="time" id="startTime" />
                 </div>
                 <div class="form-group">
                   <label for="endTime">End Time</label>
-                  <input type="time" id="endTime"  />
+                  <input type="time" id="endTime" />
                 </div>
               </div>
               <div class="form-group">
@@ -266,8 +267,24 @@
                     <!-- Department options will be added here by JavaScript -->
                   </div>
                 </div>
-                <input type="hidden" id="departments"  />
+                <input type="hidden" id="departments" />
               </div>
+
+              <!-- Scan interval option -->
+              <div class="form-group">
+                <label for="interval">Scan Interval (minutes)</label>
+                <input
+                  type="number"
+                  id="interval"
+                  min="0"
+                  value="5"
+                  placeholder="0 for manual"
+                />
+                <small style="color:#666; display:block; margin-top:0.25rem;">
+                  Enter 0 to require manual scans after the session starts; the system still performs an initial scan when the session begins.  Use a positive number to have the backend automatically repeat scans at that many minutes (default 5).
+                </small>
+              </div>
+
               <button type="submit" class="btn-custom btn-primary-custom">
                 <i class="fas fa-plus"></i> Create Session
               </button>
@@ -275,8 +292,18 @@
           </div>
 
           <!-- Attendance Scan Section -->
-           
+          <div class="scan-section">
             <div id="resultsContainer"></div>
+          </div>
+
+          <!-- Session list area -->
+          <div class="session-list" id="sessionListContainer">
+            <h4>Upcoming Sessions</h4>
+            <div id="upcomingSessions"></div>
+            <h4 style="margin-top:2rem;">Active Sessions</h4>
+            <div id="activeSessions"></div>
+            <h4 style="margin-top:2rem;">Ended Sessions</h4>
+            <div id="endedSessions"></div>
           </div>
         </div>
 
@@ -306,6 +333,8 @@
     </div>
 
     <script src="js/config.js"></script>
+    <!-- socket.io client - served by backend -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="js/dashboard.js"></script>
   </body>
 </html>

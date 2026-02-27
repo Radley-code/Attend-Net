@@ -1,135 +1,189 @@
 const Attendance = require("../models/attendance");
 const Session = require("../models/Session");
 const User = require("../models/user");
+const { getIO } = require("../utils/socket");
+
+// perform scan logic given a session document, optionally a list of mac addresses
+async function performScanForSession(session, connectedMacs = []) {
+  if (!session || !session._id) throw new Error("Session required for scan");
+  // refresh session from database to get latest data
+  const sess = await Session.findById(session._id);
+  if (!sess) throw new Error("Session not found");
+
+  // derived date/time
+  const now = new Date();
+  const dateString = sess.date.toISOString().split("T")[0];
+  const endDatetime = new Date(`${dateString}T${sess.endTime}`);
+  if (now > endDatetime) {
+    throw new Error("Session has already ended");
+  }
+
+  // if no macs provided, attempt ARP lookup
+  if (!Array.isArray(connectedMacs)) connectedMacs = [];
+  if (connectedMacs.length === 0) {
+    try {
+      const { execSync } = require("child_process");
+      const arpOutput = execSync("arp -a", { encoding: "utf-8" });
+      const macRegex = /([0-9a-f]{2}[-:]){5}[0-9a-f]{2}/gi;
+      const found = [];
+      let m;
+      while ((m = macRegex.exec(arpOutput))) {
+        found.push(m[0].replace(/-/g, ":").toUpperCase());
+      }
+      connectedMacs = [...new Set(found)];
+      console.log("Auto-detected MAC addresses from ARP:", connectedMacs);
+    } catch (arpErr) {
+      console.log("Automatic ARP scan failed", arpErr.message);
+    }
+  }
+
+  const normalizeMac = (m) =>
+    (m || "")
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-f0-9]/gi, "");
+  const normalizedConnectedSet = new Set(
+    connectedMacs.map((m) => normalizeMac(m)),
+  );
+
+  const sessionDepts = Array.isArray(sess.departments)
+    ? sess.departments.map((d) => (d || "").trim()).filter(Boolean)
+    : [];
+  let students = [];
+  if (sessionDepts.length > 0) {
+    students = await User.find({ department: { $in: sessionDepts } });
+  }
+  if ((!students || students.length === 0) && sessionDepts.length > 0) {
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const deptRegexes = sessionDepts.map(
+      (d) => new RegExp(`^${escapeRegExp(d)}$`, "i"),
+    );
+    students = await User.find({ department: { $in: deptRegexes } });
+  }
+
+  const savedIds = [];
+  for (let student of students) {
+    const studentMacNormalized = normalizeMac(student.macAddress);
+    const isPresent = normalizedConnectedSet.has(studentMacNormalized);
+    const status = isPresent ? "Present" : "Absent";
+
+    // increment counters so we can compute student-specific averages
+    const inc = { totalScans: 1 };
+    if (isPresent) inc.presentCount = 1;
+
+    const saved = await Attendance.findOneAndUpdate(
+      { studentId: student._id, sessionId: sess._id },
+      {
+        $set: {
+          department: student.department,
+          status: status.toLowerCase(),
+          timestamp: new Date(),
+        },
+        $inc: inc,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+    savedIds.push(saved._id);
+  }
+
+  let enriched = [];
+  if (savedIds.length > 0) {
+    enriched = await Attendance.find({ _id: { $in: savedIds } })
+      .populate("studentId", "name email department")
+      .populate("sessionId", "course date startTime endTime");
+  }
+
+  const results = enriched;
+  const present = results
+    .filter((r) => r.status === "present")
+    .map((r) => ({
+      name: r.studentId.name,
+      department: r.studentId.department,
+      course: r.sessionId.course,
+      session: r.sessionId._id,
+      sessionLabel: `${r.sessionId.course} (${new Date(r.sessionId.date).toISOString().split("T")[0]})`,
+      status: "Present",
+      timestamp: r.timestamp,
+      presentCount: r.presentCount || 0,
+      totalScans: r.totalScans || 0,
+      average: r.totalScans > 0 ? (r.presentCount / r.totalScans) * 100 : 0,
+    }));
+  const absent = results
+    .filter((r) => r.status === "absent")
+    .map((r) => ({
+      name: r.studentId.name,
+      department: r.studentId.department,
+      course: r.sessionId.course,
+      session: r.sessionId._id,
+      sessionLabel: `${r.sessionId.course} (${new Date(r.sessionId.date).toISOString().split("T")[0]})`,
+      status: "Absent",
+      timestamp: r.timestamp,
+      presentCount: r.presentCount || 0,
+      totalScans: r.totalScans || 0,
+      average: r.totalScans > 0 ? (r.presentCount / r.totalScans) * 100 : 0,
+    }));
+
+  const counts = {
+    total: present.length + absent.length,
+    present: present.length,
+    absent: absent.length,
+  };
+
+  // update session attendance rate
+  sess.attendanceRate =
+    counts.total > 0 ? (counts.present / counts.total) * 100 : 0;
+  await sess.save();
+
+  return { present, absent, counts };
+}
 
 // Controller to handle attendance scanning
 const scanAttendance = async (req, res) => {
   try {
-    console.log("scanAttendance body:", req.body);
     const { sessionId } = req.body;
-    // connectedMacs is an array of mac addresses detected during the scan
-    let connectedMacs = req.body.connectedMacs;
-    if (!Array.isArray(connectedMacs)) connectedMacs = [];
-
-    // Normalize MAC addresses for robust comparison: remove separators and lowercase
-    const normalizeMac = (m) =>
-      (m || "")
-        .toString()
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-f0-9]/gi, "");
-    const normalizedConnectedSet = new Set(
-      connectedMacs.map((m) => normalizeMac(m)),
-    );
+    const coordinatorId = req.user && req.user.id;
 
     const session = await Session.findById(sessionId);
     if (!session) {
       return res.status(404).json({ message: "Session not found" });
     }
-
-    // Get departments normalized and try a robust lookup for students
-    const sessionDepts = Array.isArray(session.departments)
-      ? session.departments.map((d) => (d || "").trim()).filter(Boolean)
-      : [];
-
-    // first try exact-match query
-    let students = [];
-    if (sessionDepts.length > 0) {
-      students = await User.find({ department: { $in: sessionDepts } });
+    if (coordinatorId && session.coordinator.toString() !== coordinatorId) {
+      return res
+        .status(403)
+        .json({ message: "You are not allowed to scan this session" });
     }
 
-    // if no students found, try a case-insensitive match using regexes
-    if ((!students || students.length === 0) && sessionDepts.length > 0) {
-      const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const deptRegexes = sessionDepts.map(
-        (d) => new RegExp(`^${escapeRegExp(d)}$`, "i"),
-      );
-      students = await User.find({ department: { $in: deptRegexes } });
-    }
-    let results = [];
-    const savedIds = [];
-
-    for (let student of students) {
-      const studentMacNormalized = normalizeMac(student.macAddress);
-      const isPresent = normalizedConnectedSet.has(studentMacNormalized);
-      const status = isPresent ? "Present" : "Absent";
-      //console log for debugging error had when checking for students present
-      console.log(
-        `Checking student ${student.name} mac: ${student.macAddress} normalized: ${studentMacNormalized} present: ${isPresent}`,
-      );
-
-      // Upsert attendance so repeated scans update existing records instead of creating duplicates
-      const saved = await Attendance.findOneAndUpdate(
-        { studentId: student._id, sessionId: session._id },
-        {
-          department: student.department,
-          status: status.toLowerCase(),
-          timestamp: new Date(),
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true },
-      );
-      savedIds.push(saved._id);
-      console.log(
-        "Saved/updated attendance id:",
-        saved._id.toString(),
-        "status:",
-        saved.status,
-      );
+    const now = new Date();
+    const dateString = session.date.toISOString().split("T")[0];
+    const endDatetime = new Date(`${dateString}T${session.endTime}`);
+    if (now > endDatetime) {
+      return res.status(400).json({ message: "Session has already ended" });
     }
 
-    // Debug: how many attendance docs exist for this session in DB
-    const totalForSession = await Attendance.countDocuments({
-      sessionId: session._id,
-    });
-    console.log("Total attendance documents for session:", totalForSession);
-    console.log("Saved IDs length:", savedIds.length);
+    const connectedMacs = req.body.connectedMacs;
+    const result = await performScanForSession(session, connectedMacs);
 
-    // Populate student/session details for the saved attendance records only
-    let enriched = [];
-    if (savedIds.length > 0) {
-      enriched = await Attendance.find({ _id: { $in: savedIds } })
-        .populate("studentId", "name email department")
-        .populate("sessionId", "course date startTime endTime");
-      console.log("Enriched data sample:", enriched[0]);
+    // broadcast the result to coordinator via socket
+    const io = getIO();
+    if (io) {
+      io.to(`coordinator_${session.coordinator}`).emit("scanResult", {
+        sessionId: session._id,
+        course: session.course,
+        timestamp: new Date(),
+        ...result,
+      });
     }
-
-    // return the populated attendance records as the results
-    results = enriched;
-
-    // Normalize and categorize results for frontend convenience
-    const present = results
-      .filter((r) => r.status === "present")
-      .map((r) => ({
-        name: r.studentId.name,
-        department: r.studentId.department,
-        course: r.sessionId.course,
-        status: "Present",
-        timestamp: r.timestamp,
-      }));
-
-    const absent = results
-      .filter((r) => r.status === "absent")
-      .map((r) => ({
-        name: r.studentId.name,
-        department: r.studentId.department,
-        course: r.sessionId.course,
-        status: "Absent",
-        timestamp: r.timestamp,
-      }));
 
     return res.status(201).json({
       message: "Attendance scan complete.",
-      counts: {
-        total: results.length,
-        present: present.length,
-        absent: absent.length,
-      },
-      present,
-      absent,
+      counts: result.counts,
+      present: result.present,
+      absent: result.absent,
     });
   } catch (err) {
-    console.error("Error scanning attendance:", err);
-    res
+    console.error("Error in scanAttendance:", err);
+    return res
       .status(500)
       .json({ message: "Server error during attendance scanning" });
   }
@@ -155,4 +209,8 @@ const debugAttendanceForSession = async (req, res) => {
   }
 };
 
-module.exports = { scanAttendance, debugAttendanceForSession };
+module.exports = {
+  scanAttendance,
+  debugAttendanceForSession,
+  performScanForSession,
+};
