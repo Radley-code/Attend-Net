@@ -32,9 +32,9 @@ async function getMacFromRouter(ip) {
 }
 
 // Get MAC address from Windows ARP cache
-function getMacFromArpCache(ip) {
+function getMacFromArpCache(ip) { //passing the IP address of the device we want to find the MAC for
   try {
-    // Only works on Windows
+    // this is windows specific, ARP cache is not for all OS
     if (os.platform() !== "win32") {
       console.log("ARP lookup only supported on Windows");
       return null;
@@ -52,10 +52,10 @@ function getMacFromArpCache(ip) {
         // Extract MAC address (format: aa-bb-cc-dd-ee-ff)
         const macMatch = line.match(/([0-9a-f]{2}[-:]){5}([0-9a-f]{2})/i);
         if (macMatch) {
-          // Convert dashes to colons for consistency
+          // I Convert dashes to colons for consistency
           const mac = macMatch[0].replace(/-/g, ":");
-          console.log(`Found MAC in ARP table: ${mac}`);
-          return mac.toUpperCase();
+          console.log(`Found MAC in ARP table: ${mac}`); //to view so I don't have run the arp -a manually
+          return mac.toUpperCase(); // let colledtion be capitalized for consistency
         }
       }
     }
