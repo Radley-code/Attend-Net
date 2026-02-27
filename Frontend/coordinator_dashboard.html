@@ -293,6 +293,20 @@
 
           <!-- Attendance Scan Section -->
           <div class="scan-section">
+            <div id="countdownContainer" style="display: none; margin-bottom: 1rem;">
+              <div style="padding: 1rem; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div>
+                    <i class="fas fa-clock" style="color: #2196f3; margin-right: 0.5rem;"></i>
+                    <span style="font-weight: 600; color: #1976d2;">Next automatic scan in:</span>
+                    <span id="countdownTimer" style="font-size: 1.2rem; font-weight: bold; color: #2196f3; margin-left: 0.5rem;">00:00</span>
+                  </div>
+                  <button id="cancelScanBtn" class="btn-custom btn-secondary-custom" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">
+                    <i class="fas fa-stop"></i> Cancel Auto-Scan
+                  </button>
+                </div>
+              </div>
+            </div>
             <div id="resultsContainer"></div>
           </div>
 

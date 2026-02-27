@@ -24,6 +24,97 @@ function clearAttendanceResults(sessionId) {
   localStorage.removeItem(getAttendanceKey(sessionId));
 }
 
+// Countdown timer variables
+let countdownInterval = null;
+let currentScanSessionId = null;
+let currentScanInterval = 0;
+let remainingSeconds = 0;
+
+// Countdown timer functions
+function startCountdown(sessionId, intervalMinutes) {
+  // Clear any existing countdown
+  stopCountdown();
+
+  currentScanSessionId = sessionId;
+  currentScanInterval = intervalMinutes;
+  remainingSeconds = intervalMinutes * 60;
+
+  // Show countdown container
+  const countdownContainer = document.getElementById("countdownContainer");
+  if (countdownContainer) {
+    countdownContainer.style.display = "block";
+  }
+
+  // Update display immediately
+  updateCountdownDisplay();
+
+  // Start the interval
+  countdownInterval = setInterval(() => {
+    remainingSeconds--;
+    updateCountdownDisplay();
+
+    if (remainingSeconds <= 0) {
+      // Time's up - perform automatic scan
+      performAutoScan();
+    }
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+
+  // Hide countdown container
+  const countdownContainer = document.getElementById("countdownContainer");
+  if (countdownContainer) {
+    countdownContainer.style.display = "none";
+  }
+
+  // Reset variables
+  currentScanSessionId = null;
+  currentScanInterval = 0;
+  remainingSeconds = 0;
+}
+
+function updateCountdownDisplay() {
+  const timerElement = document.getElementById("countdownTimer");
+  if (timerElement && remainingSeconds >= 0) {
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = remainingSeconds % 60;
+    timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+}
+
+async function performAutoScan() {
+  if (!currentScanSessionId) return;
+
+  try {
+    await scanSession(currentScanSessionId);
+
+    // Restart countdown for next scan
+    if (currentScanInterval > 0) {
+      startCountdown(currentScanSessionId, currentScanInterval);
+    }
+  } catch (error) {
+    console.error("Auto scan failed:", error);
+    // Show error notification
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "error",
+      title: "Auto scan failed",
+      text: error.message || "Unknown error occurred",
+      showConfirmButton: false,
+      timer: 3000,
+    });
+
+    // Stop countdown on error
+    stopCountdown();
+  }
+}
+
 // Theme Toggle
 const themeToggle = document.getElementById("themeToggle");
 
@@ -33,6 +124,24 @@ if (savedTheme === "dark") {
   document.body.classList.add("dark-theme");
   themeToggle.classList.add("active");
 }
+
+// Cancel auto-scan button event listener
+document.addEventListener("DOMContentLoaded", () => {
+  const cancelScanBtn = document.getElementById("cancelScanBtn");
+  if (cancelScanBtn) {
+    cancelScanBtn.addEventListener("click", () => {
+      stopCountdown();
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "info",
+        title: "Auto-scan cancelled",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+    });
+  }
+});
 
 themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark-theme");
@@ -526,6 +635,8 @@ async function loadAvailableDepartments() {
       Education: "fa-book",
       Law: "fa-gavel",
       Economics: "fa-chart-line",
+      Finance: "fa-chart-line",
+      Marketing: "fa-chart-line",
       Psychology: "fa-brain",
       Medicine: "fa-dna",
       Agrobiotechnology: "fa-dna",
@@ -716,6 +827,34 @@ document.getElementById("sessionForm").addEventListener("submit", async (e) => {
       icon: "warning",
       title: "Missing Selection",
       text: "Please select at least one department",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  if (new Date(`${date}T${startTime}`) >= new Date(`${date}T${endTime}`)) {
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid Time Range",
+      text: "Start time must be before end time",
+      confirmButtonColor: "#1976d2",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+      },
+    });
+    return;
+  }
+
+  if (new Date(`${date}T${startTime}`) <= new Date()) {
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid Time Range",
+      text: "Start time must be in the future",
       confirmButtonColor: "#1976d2",
       customClass: {
         container: "swal-container",
@@ -1018,11 +1157,33 @@ function createSessionCard(s, status) {
   const actions = document.createElement("div");
   actions.style = "margin-top:0.5rem;";
   if (status === "active") {
-    const btn = document.createElement("button");
-    btn.className = "btn-custom btn-primary-custom";
-    btn.textContent = "Scan";
-    btn.addEventListener("click", () => scanSession(s._id));
-    actions.appendChild(btn);
+    // Add scan button
+    const scanBtn = document.createElement("button");
+    scanBtn.className = "btn-custom btn-primary-custom";
+    scanBtn.textContent = "Scan Now";
+    scanBtn.addEventListener("click", () => scanSession(s._id));
+    actions.appendChild(scanBtn);
+
+    // Add auto-scan button if interval > 0
+    if (s.interval && s.interval > 0) {
+      const autoScanBtn = document.createElement("button");
+      autoScanBtn.className = "btn-custom btn-secondary-custom";
+      autoScanBtn.style.marginLeft = "0.5rem;";
+      autoScanBtn.textContent = "Start Auto-Scan";
+      autoScanBtn.addEventListener("click", () => {
+        startCountdown(s._id, s.interval);
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: `Auto-scan started for ${s.course}`,
+          text: `Scanning every ${s.interval} minutes`,
+          showConfirmButton: false,
+          timer: 3000,
+        });
+      });
+      actions.appendChild(autoScanBtn);
+    }
   }
   card.appendChild(actions);
   return card;
