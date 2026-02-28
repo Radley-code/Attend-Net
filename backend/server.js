@@ -40,11 +40,27 @@ mongoose
     setIO(io);
 
     io.on("connection", (socket) => {
-      console.log("socket connected", socket.id);
-      socket.on("join", (data) => {
-        if (data && data.coordinatorId) {
-          socket.join(`coordinator_${data.coordinatorId}`);
-        }
+      console.log("User connected:", socket.id);
+
+      // Join coordinator-specific room for personalized updates
+      socket.on("joinCoordinatorRoom", (coordinatorId) => {
+        socket.join(`coordinator_${coordinatorId}`);
+        console.log(`Coordinator ${coordinatorId} joined room`);
+      });
+
+      // Join session-specific room for attendance updates
+      socket.on("joinSession", (sessionId) => {
+        socket.join(`session-${sessionId}`);
+        console.log(`User ${socket.id} joined session ${sessionId}`);
+      });
+
+      socket.on("leaveSession", (sessionId) => {
+        socket.leave(`session-${sessionId}`);
+        console.log(`User ${socket.id} left session ${sessionId}`);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
       });
     });
 

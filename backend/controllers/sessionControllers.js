@@ -66,7 +66,76 @@ const getSessionsForCoordinator = async (req, res) => {
   }
 };
 
+const updateSession = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const coordinatorId = req.user && req.user.id;
+    
+    if (!coordinatorId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    if (session.coordinator.toString() !== coordinatorId) {
+      return res.status(403).json({ message: "You can only update your own sessions" });
+    }
+
+    const { course, date, startTime, endTime, departments, interval } = req.body;
+    
+    // Update fields
+    if (course) session.course = course;
+    if (date) session.date = date;
+    if (startTime) session.startTime = startTime;
+    if (endTime) session.endTime = endTime;
+    if (departments) session.departments = departments;
+    if (interval !== undefined) session.interval = typeof interval === "number" ? interval : parseInt(interval, 10) || 0;
+
+    await session.save();
+    
+    // Reschedule if needed
+    scheduleSession(session);
+    
+    res.status(200).json({ message: "Session updated successfully", session });
+  } catch (error) {
+    console.error("Error updating session:", error);
+    res.status(500).json({ message: "Server error updating session" });
+  }
+};
+
+const deleteSession = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const coordinatorId = req.user && req.user.id;
+    
+    if (!coordinatorId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    if (session.coordinator.toString() !== coordinatorId) {
+      return res.status(403).json({ message: "You can only delete your own sessions" });
+    }
+
+    await Session.findByIdAndDelete(sessionId);
+    
+    res.status(200).json({ message: "Session deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting session:", error);
+    res.status(500).json({ message: "Server error deleting session" });
+  }
+};
+
 module.exports = {
   createSession,
   getSessionsForCoordinator,
+  updateSession,
+  deleteSession,
 };

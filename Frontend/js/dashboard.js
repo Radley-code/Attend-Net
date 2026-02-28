@@ -996,62 +996,135 @@ async function scanSession(sessionId) {
 
 function renderScanResults(presentArr, absentArr, counts) {
   const resultsContainer = document.getElementById("resultsContainer");
+  const attendanceRate =
+    counts.total > 0 ? ((counts.present / counts.total) * 100).toFixed(1) : 0;
 
   const presentHtml =
     presentArr
       .map((p) => {
         const extra =
           p.totalScans != null
-            ? ` <small>(${p.presentCount}/${p.totalScans} scans, ${
+            ? ` <small class="text-muted">(${p.presentCount}/${p.totalScans} scans, ${
                 p.totalScans > 0
                   ? ((p.presentCount / p.totalScans) * 100).toFixed(1) + "%"
                   : "0%"
               })</small>`
             : "";
         return `
-    <div style="border: 1px solid #ddd; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 4px;">
-      <strong>${p.name}</strong> (${p.department}) — <span style="color: #28a745; font-weight: 600;">${p.status}</span>${extra}
+    <div class="student-record present-record">
+      <div class="student-info">
+        <i class="fas fa-user-circle student-avatar"></i>
+        <div class="student-details">
+          <div class="student-name">${p.name}</div>
+          <div class="student-meta">${p.department} ${extra}</div>
+        </div>
+      </div>
+      <div class="attendance-badge present-badge">
+        <i class="fas fa-check-circle"></i> Present
+      </div>
     </div>
   `;
       })
-      .join("") || '<div style="color: #999;">No present students</div>';
+      .join("") || '<div class="no-records">No present students</div>';
 
   const absentHtml =
     absentArr
       .map((a) => {
         const extra =
           a.totalScans != null
-            ? ` <small>(${a.presentCount}/${a.totalScans} scans, ${
+            ? ` <small class="text-muted">(${a.presentCount}/${a.totalScans} scans, ${
                 a.totalScans > 0
                   ? ((a.presentCount / a.totalScans) * 100).toFixed(1) + "%"
                   : "0%"
               })</small>`
             : "";
         return `
-    <div style="border: 1px solid #ddd; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 4px;">
-      <strong>${a.name}</strong> (${a.department}) — <span style="color: #dc3545; font-weight: 600;">${a.status}</span>${extra}
+    <div class="student-record absent-record">
+      <div class="student-info">
+        <i class="fas fa-user-circle student-avatar"></i>
+        <div class="student-details">
+          <div class="student-name">${a.name}</div>
+          <div class="student-meta">${a.department} ${extra}</div>
+        </div>
+      </div>
+      <div class="attendance-badge absent-badge">
+        <i class="fas fa-times-circle"></i> Absent
+      </div>
     </div>
   `;
       })
-      .join("") || '<div style="color: #999;">No absent students</div>';
+      .join("") || '<div class="no-records">No absent students</div>';
 
   resultsContainer.innerHTML = `
-    <div style="margin-top: 1.5rem; background: white; padding: 1.5rem; border-radius: 8px;">
-      <div style="margin-bottom: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 4px;">
-        <strong>Total:</strong> ${counts.total} — <strong>Present:</strong> ${counts.present} — <strong>Absent:</strong> ${counts.absent}
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-        <div>
-          <h5 style="color: #28a745; margin-bottom: 1rem;">Present</h5>
-          ${presentHtml}
+    <div class="scan-results-container">
+      <div class="scan-summary">
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-number">${counts.total}</div>
+            <div class="summary-label">Total Students</div>
+          </div>
         </div>
-        <div>
-          <h5 style="color: #dc3545; margin-bottom: 1rem;">Absent</h5>
-          ${absentHtml}
+        <div class="summary-card present">
+          <div class="summary-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-number">${counts.present}</div>
+            <div class="summary-label">Present</div>
+          </div>
+        </div>
+        <div class="summary-card absent">
+          <div class="summary-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-number">${counts.absent}</div>
+            <div class="summary-label">Absent</div>
+          </div>
+        </div>
+        <div class="summary-card rate">
+          <div class="summary-icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-number">${attendanceRate}%</div>
+            <div class="summary-label">Attendance Rate</div>
+          </div>
         </div>
       </div>
-      <div style="margin-top: 1.5rem;">
-        <button class="btn-custom btn-secondary-custom" onclick="clearScanDisplay()">Clear Results</button>
+      
+      <div class="students-grid">
+        <div class="students-section">
+          <div class="section-header">
+            <h5><i class="fas fa-check-circle text-success"></i> Present Students</h5>
+            <span class="count-badge present-count">${counts.present}</span>
+          </div>
+          <div class="students-list">
+            ${presentHtml}
+          </div>
+        </div>
+        
+        <div class="students-section">
+          <div class="section-header">
+            <h5><i class="fas fa-times-circle text-danger"></i> Absent Students</h5>
+            <span class="count-badge absent-count">${counts.absent}</span>
+          </div>
+          <div class="students-list">
+            ${absentHtml}
+          </div>
+        </div>
+      </div>
+      
+      <div class="scan-actions">
+        <button class="btn-custom btn-secondary-custom" onclick="clearScanDisplay()">
+          <i class="fas fa-eraser"></i> Clear Results
+        </button>
+        <button class="btn-custom btn-primary-custom" onclick="switchTab('reports')">
+          <i class="fas fa-chart-bar"></i> View Full Report
+        </button>
       </div>
     </div>
   `;
@@ -1144,18 +1217,23 @@ function createSessionCard(s, status) {
   const card = document.createElement("div");
   card.className = "session-card";
   card.style =
-    "border:1px solid #ccc; padding:0.75rem; margin-bottom:0.75rem; border-radius:4px; background:#fff;";
+    "border:1px solid #ccc; padding:0.75rem; margin-bottom:0.75rem; border-radius:4px; background:#fff; position: relative;";
   card.innerHTML = `
     <div><strong>${s.course}</strong> (${dateString})</div>
     <div>Time: ${s.startTime} - ${s.endTime}</div>
     <div>Interval: ${s.interval || 0} min</div>
-    <div>Departments: ${s.departments.join(", ")}</div>
+    <div class="departments-list">
+      <strong>Departments:</strong>
+      <div class="departments-tags">${s.departments.map((dept) => `<span class="dept-tag">${dept}</span>`).join("")}</div>
+    </div>
     <div>Status: <span style="font-weight:600;">${status}</span></div>
   `;
 
   // add action button for manual scans when active
   const actions = document.createElement("div");
-  actions.style = "margin-top:0.5rem;";
+  actions.style =
+    "margin-top:0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;";
+
   if (status === "active") {
     // Add scan button
     const scanBtn = document.createElement("button");
@@ -1168,7 +1246,6 @@ function createSessionCard(s, status) {
     if (s.interval && s.interval > 0) {
       const autoScanBtn = document.createElement("button");
       autoScanBtn.className = "btn-custom btn-secondary-custom";
-      autoScanBtn.style.marginLeft = "0.5rem;";
       autoScanBtn.textContent = "Start Auto-Scan";
       autoScanBtn.addEventListener("click", () => {
         startCountdown(s._id, s.interval);
@@ -1184,7 +1261,37 @@ function createSessionCard(s, status) {
       });
       actions.appendChild(autoScanBtn);
     }
+  } else if (status === "upcoming") {
+    // Department management buttons for upcoming sessions
+    const editDeptsBtn = document.createElement("button");
+    editDeptsBtn.className = "btn-custom btn-secondary-custom";
+    editDeptsBtn.innerHTML = '<i class="fas fa-edit"></i> Edit Depts';
+    editDeptsBtn.addEventListener("click", () => openDepartmentModal(s));
+    actions.appendChild(editDeptsBtn);
+
+    const editSessionBtn = document.createElement("button");
+    editSessionBtn.className = "btn-custom btn-info-custom";
+    editSessionBtn.innerHTML = '<i class="fas fa-pencil-alt"></i> Edit';
+    editSessionBtn.addEventListener("click", () => openEditSessionModal(s));
+    actions.appendChild(editSessionBtn);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn-custom btn-danger-custom";
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+    deleteBtn.addEventListener("click", () => deleteSession(s._id));
+    actions.appendChild(deleteBtn);
+  } else if (status === "ended") {
+    // View results for ended sessions
+    const viewResultsBtn = document.createElement("button");
+    viewResultsBtn.className = "btn-custom btn-primary-custom";
+    viewResultsBtn.innerHTML = '<i class="fas fa-chart-bar"></i> View Results';
+    viewResultsBtn.addEventListener("click", () => {
+      loadSessionResults(s._id);
+      switchTab("reports");
+    });
+    actions.appendChild(viewResultsBtn);
   }
+
   card.appendChild(actions);
   return card;
 }
@@ -1250,19 +1357,23 @@ function initSocket() {
   socket = io(BACKEND_CONFIG.URL);
   socket.on("connect", () => {
     console.log("socket connected");
-    socket.emit("join", { coordinatorId: getCoordinatorId() });
+    const coordinatorId = getCoordinatorId();
+    socket.emit("joinCoordinatorRoom", coordinatorId);
   });
 
   socket.on("sessionStarted", (session) => {
     console.log("sessionStarted event", session);
     loadCoordinatorSessions();
+    // Auto-switch to sessions tab when session starts
+    switchTab("sessions");
     Swal.fire({
       toast: true,
       position: "top-end",
       icon: "info",
       title: `Session started: ${session.course}`,
+      text: "Session is now active and ready for scanning",
       showConfirmButton: false,
-      timer: 2000,
+      timer: 3000,
     });
   });
 
@@ -1276,13 +1387,348 @@ function initSocket() {
     });
     // update reports view if open
     updateReportStats(data.sessionId);
+    // show scan results in current view
+    renderScanResults(data.present, data.absent, data.counts);
+
+    // Show notification with better formatting
+    const totalStudents = data.counts.total;
+    const presentCount = data.counts.present;
+    const attendanceRate =
+      totalStudents > 0 ? ((presentCount / totalStudents) * 100).toFixed(1) : 0;
+
     Swal.fire({
       toast: true,
       position: "top-end",
       icon: "success",
-      title: `Scan done for ${data.course} at ${new Date(data.timestamp).toLocaleTimeString()}`,
+      title: `Scan Complete: ${data.course}`,
+      html: `
+        <div style="text-align: left;">
+          <div><strong>Total:</strong> ${totalStudents}</div>
+          <div><strong>Present:</strong> ${presentCount}</div>
+          <div><strong>Absent:</strong> ${data.counts.absent}</div>
+          <div><strong>Rate:</strong> ${attendanceRate}%</div>
+        </div>
+      `,
       showConfirmButton: false,
-      timer: 2000,
+      timer: 4000,
     });
   });
+}
+
+// Department Management Functions
+let currentEditingSession = null;
+let allAvailableDepartments = [];
+
+function openDepartmentModal(session) {
+  currentEditingSession = session;
+  document.getElementById("sessionCourseDisplay").value =
+    `${session.course} (${session.date.split("T")[0]})`;
+
+  // Load available departments
+  loadAvailableDepartmentsForModal();
+
+  // Show current departments
+  renderCurrentDepartments(session.departments || []);
+
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById("departmentModal"));
+  modal.show();
+}
+
+async function loadAvailableDepartmentsForModal() {
+  try {
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/users/departments`);
+    const data = await res.json();
+    allAvailableDepartments = data.departments || [];
+    renderAvailableDepartments();
+  } catch (err) {
+    console.error("Error loading departments:", err);
+    allAvailableDepartments = [];
+  }
+}
+
+function renderCurrentDepartments(currentDepts) {
+  const container = document.getElementById("currentDepartments");
+  container.innerHTML = currentDepts
+    .map(
+      (dept) => `
+    <span class="department-tag current">
+      ${dept}
+      <button type="button" class="btn-remove" onclick="removeDepartment('${dept}')">
+        <i class="fas fa-times"></i>
+      </button>
+    </span>
+  `,
+    )
+    .join("");
+}
+
+function renderAvailableDepartments() {
+  const container = document.getElementById("availableDepartments");
+  const currentDepts = currentEditingSession?.departments || [];
+  const availableDepts = allAvailableDepartments.filter(
+    (dept) => !currentDepts.includes(dept),
+  );
+
+  container.innerHTML = availableDepts
+    .map(
+      (dept) => `
+    <span class="department-tag available" onclick="addDepartment('${dept}')">
+      <i class="fas fa-plus"></i> ${dept}
+    </span>
+  `,
+    )
+    .join("");
+}
+
+function addDepartment(dept) {
+  if (!currentEditingSession) return;
+
+  if (!currentEditingSession.departments) {
+    currentEditingSession.departments = [];
+  }
+
+  if (!currentEditingSession.departments.includes(dept)) {
+    currentEditingSession.departments.push(dept);
+    renderCurrentDepartments(currentEditingSession.departments);
+    renderAvailableDepartments();
+  }
+}
+
+function removeDepartment(dept) {
+  if (!currentEditingSession) return;
+
+  const index = currentEditingSession.departments.indexOf(dept);
+  if (index > -1) {
+    currentEditingSession.departments.splice(index, 1);
+    renderCurrentDepartments(currentEditingSession.departments);
+    renderAvailableDepartments();
+  }
+}
+
+function addNewDepartment() {
+  const input = document.getElementById("newDepartment");
+  const deptName = input.value.trim();
+
+  if (!deptName) {
+    Swal.fire("Warning", "Please enter a department name", "warning");
+    return;
+  }
+
+  if (!currentEditingSession.departments) {
+    currentEditingSession.departments = [];
+  }
+
+  if (currentEditingSession.departments.includes(deptName)) {
+    Swal.fire("Warning", "Department already exists", "warning");
+    return;
+  }
+
+  currentEditingSession.departments.push(deptName);
+  renderCurrentDepartments(currentEditingSession.departments);
+  renderAvailableDepartments();
+  input.value = "";
+
+  // Add to available departments list
+  if (!allAvailableDepartments.includes(deptName)) {
+    allAvailableDepartments.push(deptName);
+  }
+}
+
+async function saveDepartmentChanges() {
+  if (!currentEditingSession) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(
+      `${BACKEND_CONFIG.URL}/api/sessions/${currentEditingSession._id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          departments: currentEditingSession.departments,
+        }),
+      },
+    );
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to update departments");
+    }
+
+    Swal.fire("Success", "Departments updated successfully", "success");
+    bootstrap.Modal.getInstance(
+      document.getElementById("departmentModal"),
+    ).hide();
+    loadCoordinatorSessions();
+  } catch (err) {
+    console.error("Error updating departments:", err);
+    Swal.fire("Error", err.message, "error");
+  }
+}
+
+// Session Edit Functions
+function openEditSessionModal(session) {
+  document.getElementById("editSessionId").value = session._id;
+  document.getElementById("editCourse").value = session.course;
+  document.getElementById("editDate").value = session.date.split("T")[0];
+  document.getElementById("editStartTime").value = session.startTime;
+  document.getElementById("editEndTime").value = session.endTime;
+  document.getElementById("editInterval").value = session.interval || 5;
+
+  const modal = new bootstrap.Modal(
+    document.getElementById("editSessionModal"),
+  );
+  modal.show();
+}
+
+async function updateSession() {
+  const sessionId = document.getElementById("editSessionId").value;
+  const course = document.getElementById("editCourse").value.trim();
+  const date = document.getElementById("editDate").value;
+  const startTime = document.getElementById("editStartTime").value;
+  const endTime = document.getElementById("editEndTime").value;
+  const interval = parseInt(document.getElementById("editInterval").value) || 0;
+
+  if (!course || !date || !startTime || !endTime) {
+    Swal.fire("Warning", "Please fill in all required fields", "warning");
+    return;
+  }
+
+  if (new Date(`${date}T${startTime}`) >= new Date(`${date}T${endTime}`)) {
+    Swal.fire("Warning", "Start time must be before end time", "warning");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/sessions/${sessionId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        course,
+        date,
+        startTime,
+        endTime,
+        interval,
+      }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to update session");
+    }
+
+    Swal.fire("Success", "Session updated successfully", "success");
+    bootstrap.Modal.getInstance(
+      document.getElementById("editSessionModal"),
+    ).hide();
+    loadCoordinatorSessions();
+  } catch (err) {
+    console.error("Error updating session:", err);
+    Swal.fire("Error", err.message, "error");
+  }
+}
+
+async function deleteSession(sessionId) {
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to recover this session!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BACKEND_CONFIG.URL}/api/sessions/${sessionId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to delete session");
+    }
+
+    Swal.fire("Success", "Session deleted successfully", "success");
+    loadCoordinatorSessions();
+  } catch (err) {
+    console.error("Error deleting session:", err);
+    Swal.fire("Error", err.message, "error");
+  }
+}
+
+async function loadSessionResults(sessionId) {
+  try {
+    const saved = loadAttendanceResults(sessionId);
+    if (saved && saved.presentArr && saved.absentArr) {
+      populateAttendanceTable(saved.presentArr, saved.absentArr);
+      updateReportStats(sessionId);
+    } else {
+      // Try to fetch from server if not in localStorage
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${BACKEND_CONFIG.URL}/api/attendance/debug/${sessionId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        const docs = data.docs || [];
+
+        const presentArr = [];
+        const absentArr = [];
+
+        docs.forEach((doc) => {
+          const student = {
+            name: doc.studentId.name,
+            department: doc.studentId.department,
+            course: doc.sessionId.course,
+            status: doc.status === "present" ? "Present" : "Absent",
+            timestamp: doc.timestamp,
+            presentCount: doc.presentCount || 0,
+            totalScans: doc.totalScans || 0,
+          };
+
+          if (doc.status === "present") {
+            presentArr.push(student);
+          } else {
+            absentArr.push(student);
+          }
+        });
+
+        saveAttendanceResults(sessionId, {
+          presentArr,
+          absentArr,
+          counts: {
+            total: presentArr.length + absentArr.length,
+            present: presentArr.length,
+            absent: absentArr.length,
+          },
+        });
+        populateAttendanceTable(presentArr, absentArr);
+        updateReportStats(sessionId);
+      }
+    }
+  } catch (err) {
+    console.error("Error loading session results:", err);
+    Swal.fire("Error", "Failed to load session results", "error");
+  }
 }
