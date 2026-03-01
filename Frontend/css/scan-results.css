@@ -563,3 +563,71 @@
     border-color: #4a5568;
   }
 }
+
+/* Auto-scan Status Controls */
+.auto-scan-info {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.scan-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.scan-status-indicator i {
+  font-size: 1.2rem;
+}
+
+.scan-countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.scan-countdown i {
+  color: #ffc107;
+}
+
+.scan-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.scan-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.scan-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark theme support */
+.dark-theme .auto-scan-info {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark-theme .scan-countdown {
+  color: #a0aec0;
+}
+
+.dark-theme .scan-actions button:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

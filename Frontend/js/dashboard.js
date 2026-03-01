@@ -1220,6 +1220,22 @@ function renderSessionList(sessions) {
     }
   });
 
+  // Show/hide auto-scan status based on active sessions
+  const autoScanStatus = document.getElementById('autoScanStatus');
+  if (autoScanStatus) {
+    if (active.length > 0) {
+      autoScanStatus.style.display = 'block';
+      // If there's no current auto-scan session, set it to the first active session
+      if (!currentAutoScanSession && active[0].session.interval > 0) {
+        currentAutoScanSession = active[0].session;
+        updateAutoScanStatus(false, currentAutoScanSession.interval);
+      }
+    } else {
+      autoScanStatus.style.display = 'none';
+      currentAutoScanSession = null;
+    }
+  }
+
   // Render active sessions (always full display)
   active.forEach((item) => {
     activeDiv.appendChild(createSessionCard(item.session, item.status));
@@ -1269,25 +1285,8 @@ function createSessionCard(s, status) {
     scanBtn.addEventListener("click", () => scanSession(s._id));
     actions.appendChild(scanBtn);
 
-    // Add auto-scan button if interval > 0
-    if (s.interval && s.interval > 0) {
-      const autoScanBtn = document.createElement("button");
-      autoScanBtn.className = "btn-custom btn-secondary-custom";
-      autoScanBtn.textContent = "Start Auto-Scan";
-      autoScanBtn.addEventListener("click", () => {
-        startCountdown(s._id, s.interval);
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "success",
-          title: `Auto-scan started for ${s.course}`,
-          text: `Scanning every ${s.interval} minutes`,
-          showConfirmButton: false,
-          timer: 3000,
-        });
-      });
-      actions.appendChild(autoScanBtn);
-    }
+    // Auto-scan starts automatically for active sessions with interval > 0
+    // No manual auto-scan button needed to avoid confusion
   } else if (status === "upcoming") {
     // Department management buttons for upcoming sessions
     const editDeptsBtn = document.createElement("button");
@@ -1363,6 +1362,208 @@ function renderSectionWithSeeMore(container, items, sectionId, limit) {
   }
 }
 
+// Auto-scan management variables
+let currentAutoScanSession = null;
+let autoScanCountdown = null;
+let autoScanInterval = null;
+
+// Auto-scan control functions
+function startAutoScanForCurrentSession() {
+  const activeSessions = currentSessions.filter(s => s.status === 'active');
+  if (activeSessions.length === 0) {
+    Swal.fire('Warning', 'No active sessions found', 'warning');
+    return;
+  }
+  
+  currentAutoScanSession = activeSessions[0]; // Use the first active session
+  if (!currentAutoScanSession) return;
+  
+  // Show auto-scan status
+  updateAutoScanStatus(true, currentAutoScanSession.interval);
+  
+  // Start the countdown
+  startAutoScanCountdown(currentAutoScanSession.interval);
+  
+  // Start the actual scanning
+  startCountdown(currentAutoScanSession._id, currentAutoScanSession.interval);
+  
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: `Auto-scan started for ${currentAutoScanSession.course}`,
+    text: `Scanning every ${currentAutoScanSession.interval} minutes`,
+    showConfirmButton: false,
+    timer: 3000,
+  });
+}
+
+function resumeAutoScanForCurrentSession() {
+  if (!currentAutoScanSession) {
+    // Find an active session to resume
+    const activeSessions = currentSessions.filter(s => s.status === 'active');
+    if (activeSessions.length === 0) {
+      Swal.fire('Warning', 'No active sessions found', 'warning');
+      return;
+    }
+    
+    currentAutoScanSession = activeSessions[0];
+    if (!currentAutoScanSession) return;
+  }
+  
+  // Show auto-scan status
+  updateAutoScanStatus(true, currentAutoScanSession.interval);
+  
+  // Start the countdown
+  startAutoScanCountdown(currentAutoScanSession.interval);
+  
+  // Start the actual scanning
+  startCountdown(currentAutoScanSession._id, currentAutoScanSession.interval);
+  
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: `Auto-scan resumed for ${currentAutoScanSession.course}`,
+    text: `Scanning every ${currentAutoScanSession.interval} minutes`,
+    showConfirmButton: false,
+    timer: 3000,
+  });
+}
+
+function stopAutoScanForCurrentSession() {
+  if (!currentAutoScanSession) return;
+  
+  // Stop countdown
+  stopCountdown();
+  
+  // Clear auto-scan countdown
+  if (autoScanCountdown) {
+    clearInterval(autoScanCountdown);
+    autoScanCountdown = null;
+  }
+  
+  // Clear auto-scan interval
+  if (autoScanInterval) {
+    clearInterval(autoScanInterval);
+    autoScanInterval = null;
+  }
+  
+  // Make sure the status panel is visible before updating
+  const statusDiv = document.getElementById('autoScanStatus');
+  if (statusDiv) {
+    statusDiv.style.display = 'block';
+  }
+  
+  // Update status to paused but keep the session reference
+  updateAutoScanStatus(false, currentAutoScanSession.interval);
+  
+  // Don't clear currentAutoScanSession - keep it for resume functionality
+  
+  // Force immediate button state update
+  setTimeout(() => {
+    const startBtn = document.getElementById('startAutoScan');
+    const stopBtn = document.getElementById('stopAutoScan');
+    if (startBtn) {
+      startBtn.style.display = 'inline-block';
+      startBtn.disabled = false;
+    }
+    if (stopBtn) {
+      stopBtn.style.display = 'none';
+      stopBtn.disabled = true;
+    }
+  }, 10);
+  
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'info',
+    title: 'Auto-scan paused',
+    showConfirmButton: false,
+    timer: 3000,
+  });
+}
+
+function updateAutoScanStatus(isActive, interval = 0) {
+  const statusDiv = document.getElementById('autoScanStatus');
+  const statusIndicator = document.getElementById('scanStatusIndicator');
+  const statusText = document.getElementById('scanStatusText');
+  const countdownDiv = document.getElementById('scanCountdown');
+  const countdownText = document.getElementById('scanCountdownText');
+  const startBtn = document.getElementById('startAutoScan');
+  const stopBtn = document.getElementById('stopAutoScan');
+  
+  if (!statusDiv || !statusIndicator || !statusText) {
+    console.warn('Auto-scan status elements not found');
+    return;
+  }
+  
+  if (isActive) {
+    statusDiv.style.display = 'block';
+    statusIndicator.innerHTML = '<i class="fas fa-play-circle" style="color: #28a745;"></i>';
+    statusText.textContent = 'Active';
+    
+    if (countdownDiv && countdownText) {
+      countdownDiv.style.display = 'block';
+      countdownText.textContent = `Next scan in ${interval}:--`;
+    }
+    
+    if (startBtn) {
+      startBtn.style.display = 'none';
+      startBtn.disabled = true;
+    }
+    if (stopBtn) {
+      stopBtn.style.display = 'inline-block';
+      stopBtn.disabled = false;
+    }
+  } else {
+    statusDiv.style.display = 'block';
+    statusIndicator.innerHTML = '<i class="fas fa-pause-circle" style="color: #6c757d;"></i>';
+    statusText.textContent = 'Paused';
+    
+    if (countdownDiv && countdownText) {
+      countdownDiv.style.display = 'block';
+      countdownText.textContent = `Paused (${interval}min interval)`;
+    }
+    
+    if (startBtn) {
+      startBtn.style.display = 'inline-block';
+      startBtn.disabled = false;
+    }
+    if (stopBtn) {
+      stopBtn.style.display = 'none';
+      stopBtn.disabled = true;
+    }
+  }
+}
+
+function startAutoScanCountdown(intervalMinutes) {
+  let remainingSeconds = intervalMinutes * 60;
+  
+  if (autoScanCountdown) {
+    clearInterval(autoScanCountdown);
+  }
+  
+  autoScanCountdown = setInterval(() => {
+    remainingSeconds--;
+    
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = remainingSeconds % 60;
+    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    const countdownText = document.getElementById('scanCountdownText');
+    if (countdownText) {
+      countdownText.textContent = timeString;
+    }
+    
+    if (remainingSeconds <= 0) {
+      clearInterval(autoScanCountdown);
+      // Restart countdown for next interval
+      startAutoScanCountdown(intervalMinutes);
+    }
+  }, 1000);
+}
+
 // socket variable
 let socket = null;
 let currentSessions = []; // Track all sessions for report aggregation
@@ -1374,6 +1575,12 @@ window.addEventListener("DOMContentLoaded", () => {
   updateReportStats();
   loadAvailableDepartments();
   initSocket();
+  
+  // Initialize auto-scan status panel
+  const autoScanStatus = document.getElementById('autoScanStatus');
+  if (autoScanStatus) {
+    autoScanStatus.style.display = 'none';
+  }
 });
 
 function initSocket() {
@@ -1402,6 +1609,24 @@ function initSocket() {
       showConfirmButton: false,
       timer: 3000,
     });
+    
+    // Auto-start auto-scan if session has interval > 0
+    if (session.interval && session.interval > 0) {
+      currentAutoScanSession = session;
+      updateAutoScanStatus(true, session.interval);
+      startAutoScanCountdown(session.interval);
+      startCountdown(session._id, session.interval);
+      
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `Auto-scan started for ${session.course}`,
+        text: `Scanning every ${session.interval} minutes`,
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    }
   });
 
   socket.on("scanResult", (data) => {

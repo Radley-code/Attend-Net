@@ -4,10 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AttendNet Coordinator Dashboard</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -286,6 +284,29 @@
                 </small>
               </div>
 
+              <!-- Auto-scan status -->
+              <div class="form-group" id="autoScanStatus" style="display: none;">
+                <label>Auto-Scan Status</label>
+                <div class="auto-scan-info">
+                  <div class="scan-status-indicator" id="scanStatusIndicator">
+                    <i class="fas fa-pause-circle"></i>
+                    <span id="scanStatusText">Not Active</span>
+                  </div>
+                  <div class="scan-countdown" id="scanCountdown">
+                    <i class="fas fa-clock"></i>
+                    <span id="scanCountdownText">--:--</span>
+                  </div>
+                  <div class="scan-actions">
+                    <button type="button" class="btn-custom btn-success-custom" id="startAutoScan" onclick="resumeAutoScanForCurrentSession()">
+                      <i class="fas fa-play"></i> Resume Auto-Scan
+                    </button>
+                    <button type="button" class="btn-custom btn-danger-custom" id="stopAutoScan" onclick="stopAutoScanForCurrentSession()" style="display: none;">
+                      <i class="fas fa-pause"></i> Pause Auto-Scan
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <button type="submit" class="btn-custom btn-primary-custom">
                 <i class="fas fa-plus"></i> Create Session
               </button>
@@ -440,6 +461,8 @@
     <script src="js/config.js"></script>
     <!-- socket.io client from CDN -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/dashboard.js"></script>
   </body>
 </html>
