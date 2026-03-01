@@ -26,8 +26,11 @@
           <span></span>
         </button>
         <div class="navbar-tabs" id="navbarTabs">
-          <a href="#" class="nav-link active" data-tab="reports">
+          <a href="#" class="nav-link" data-tab="reports">
             <i class="fas fa-chart-bar"></i> <span>Reports</span>
+          </a>
+          <a href="#" class="nav-link" data-tab="session-history">
+            <i class="fas fa-history"></i> <span>Session History</span>
           </a>
           <a href="#" class="nav-link" data-tab="sessions">
             <i class="fas fa-calendar"></i> <span>Sessions</span>
@@ -347,6 +350,127 @@
             <h4 style="margin-top:2rem;">Ended Sessions</h4>
   
             <div id="endedSessions"></div>
+          </div>
+        </div>
+
+        <!-- Session History Tab -->
+        <div id="session-history" class="tab-content">
+          <div class="page-title">Session History</div>
+          <div class="page-subtitle">View detailed reports of past sessions</div>
+
+          <!-- Session Summary Statistics -->
+          <div class="stats-container">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <div class="stat-value" id="totalSessions">0</div>
+              <div class="stat-label">Total Sessions</div>
+              <div class="stat-sublabel">Sessions completed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="color: #28a745">
+                <i class="fas fa-user-check"></i>
+              </div>
+              <div class="stat-value" id="totalStudentsHist">0</div>
+              <div class="stat-label">Total Students</div>
+              <div class="stat-sublabel">Across all sessions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="color: #ffc107">
+                <i class="fas fa-percentage"></i>
+              </div>
+              <div class="stat-value" id="avgAttendanceRate">0%</div>
+              <div class="stat-label">Avg Attendance</div>
+              <div class="stat-sublabel">Across all sessions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="color: #17a2b8">
+                <i class="fas fa-qrcode"></i>
+              </div>
+              <div class="stat-value" id="totalScans">0</div>
+              <div class="stat-label">Total Scans</div>
+              <div class="stat-sublabel">Scans performed</div>
+            </div>
+          </div>
+
+          <!-- Session History Filters -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <i class="fas fa-filter"></i> Filter Sessions
+            </div>
+            <div class="filter-row">
+              <div class="filter-group">
+                <label for="historyDateFrom">From Date</label>
+                <input type="date" id="historyDateFrom" />
+              </div>
+              <div class="filter-group">
+                <label for="historyDateTo">To Date</label>
+                <input type="date" id="historyDateTo" />
+              </div>
+              <div class="filter-group">
+                <label for="historyDepartment">Department</label>
+                <select id="historyDepartment">
+                  <option value="">All Departments</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="historyCourse">Course</label>
+                <input type="text" id="historyCourse" placeholder="Search courses..." />
+              </div>
+            </div>
+            <div class="filter-buttons">
+              <button class="btn-custom btn-primary-custom" id="applyHistoryFilters">
+                <i class="fas fa-search"></i> Apply Filters
+              </button>
+              <button class="btn-custom btn-secondary-custom" id="clearHistoryFilters">
+                <i class="fas fa-times"></i> Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Session History Table -->
+          <div class="table-section">
+            <div class="table-title">
+              <i class="fas fa-history"></i> Past Sessions
+            </div>
+            <div class="table-subtitle">
+              Click on a session to view detailed attendance records.
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Course</th>
+                    <th>Time</th>
+                    <th>Departments</th>
+                    <th>Students</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Rate</th>
+                    <th>Scans</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="sessionHistoryTableBody">
+                  <tr>
+                    <td colspan="10" style="text-align: center; color: #999">
+                      No session history found
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination-custom">
+              <button class="pagination-btn" id="historyPrevBtn">
+                <i class="fas fa-chevron-left"></i> Previous
+              </button>
+              <span id="historyPageInfo">Page 1</span>
+              <button class="pagination-btn" id="historyNextBtn">
+                Next <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
 

@@ -104,6 +104,14 @@ app.use("/api/coordinator", loginRoutes);
 const adminRoutes = require("./routes/adminRoutes");
 app.use("/api/admin", adminRoutes);
 
+// Import session summary routes
+const sessionSummaryRoutes = require("./routes/sessionSummaryRoutes");
+app.use("/api/session-summaries", sessionSummaryRoutes);
+
+// // Import test routes
+// const testRoutes = require("./routes/testRoutes");
+// app.use("/api/test", testRoutes);
+
 // Graceful shutdown handling
 const { cancelAllSchedules } = require("./utils/sessionScheduler");
 

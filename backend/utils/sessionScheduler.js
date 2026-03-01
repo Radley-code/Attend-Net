@@ -1,8 +1,9 @@
-const Session = require("../models/Session");
+const { createSessionSummary } = require('../controllers/sessionSummaryController');
 const {
   performScanForSession,
 } = require("../controllers/attendanceControllers");
 const { getIO } = require("./socket");
+const mongoose = require("mongoose");
 
 // keep track of timers per session
 const timers = {};
@@ -50,19 +51,28 @@ function scheduleSession(session) {
     if (intervalMinutes > 0) {
       console.log(`Setting up interval scans every ${intervalMinutes} minutes for session ${session._id}`);
       const intervalId = setInterval(
-        async () => {
-          const now2 = new Date();
-          if (now2 >= end) {
-            console.log(`Session ${session._id} ended, stopping interval scans`);
-            clearInterval(intervalId);
-            delete timers[session._id];
-            return;
-          }
-          console.log(`Performing scheduled scan for session ${session._id}`);
-          await performScanAndEmit(session);
-        },
-        intervalMinutes * 60 * 1000,
-      );
+            async () => {
+              const now2 = new Date();
+              if (now2 >= end) {
+                console.log(`Session ${session._id} ended, stopping interval scans`);
+                clearInterval(intervalId);
+                delete timers[session._id];
+                
+                // Create session summary when session ends
+                try {
+                  await createSessionSummary(session._id);
+                  console.log(`Session summary created for ended session ${session._id}`);
+                } catch (error) {
+                  console.error(`Failed to create session summary for ${session._id}:`, error);
+                }
+                
+                return;
+              }
+              console.log(`Performing scheduled scan for session ${session._id}`);
+              await performScanAndEmit(session);
+            },
+            intervalMinutes * 60 * 1000,
+          );
       // Store the interval timer
       if (!timers[session._id]) {
         timers[session._id] = {};
@@ -81,6 +91,7 @@ function scheduleSession(session) {
 async function performScanAndEmit(session) {
   try {
     // Check if session still exists and is valid
+    const Session = mongoose.model("Session");
     const currentSession = await Session.findById(session._id);
     if (!currentSession) {
       console.log(`Session ${session._id} no longer exists, cancelling schedule`);
@@ -124,6 +135,7 @@ async function initSchedules() {
   try {
     const now = new Date();
     // Only schedule sessions that haven't ended yet
+    const Session = mongoose.model("Session");
     const sessions = await Session.find({ endTime: { $gt: now } });
     console.log(`Found ${sessions.length} upcoming/active sessions to schedule`);
     
@@ -149,6 +161,12 @@ async function initSchedules() {
                 console.log(`Session ${s._id} ended, stopping interval scans`);
                 clearInterval(intervalId);
                 delete timers[s._id];
+                try {
+                  await createSessionSummary(s._id);
+                  console.log(`Session summary created for ended session ${s._id}`);
+                } catch (error) {
+                  console.error(`Failed to create session summary for ${s._id}:`, error);
+                }
                 return;
               }
               console.log(`Performing scheduled scan for active session ${s._id}`);

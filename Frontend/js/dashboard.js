@@ -228,8 +228,8 @@ function switchTab(tabName) {
   }
 }
 
-// Update Statistics - loads from all active sessions unless specific sessionId passed
-function updateReportStats(sessionId) {
+// Update Statistics - loads from all active sessions and session summaries unless specific sessionId passed
+async function updateReportStats(sessionId) {
   allRecords = [];
   let totalPresent = 0;
   let totalAbsent = 0;
@@ -268,26 +268,74 @@ function updateReportStats(sessionId) {
     }
   }
 
-  // Update summary stats
+  // Load session summary statistics for comprehensive data
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries/stats`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    });
+    
+    if (response.ok) {
+      const stats = await response.json();
+      
+      // Update with comprehensive session summary data
+      const totalCount = stats.totalStudents || (totalPresent + totalAbsent);
+      const presentCount = stats.totalPresent || totalPresent;
+      const absentCount = stats.totalAbsent || totalAbsent;
+      const rate = stats.averageAttendanceRate || 
+        (totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : 0);
+
+      // Update Reports section statistics with null checks
+      const totalStudentsEl = document.getElementById("totalStudents");
+      const totalPresentEl = document.getElementById("totalPresent");
+      const totalAbsentEl = document.getElementById("totalAbsent");
+      const attendanceRateEl = document.getElementById("attendanceRate");
+      
+      if (totalStudentsEl) totalStudentsEl.textContent = totalCount;
+      if (totalPresentEl) totalPresentEl.textContent = presentCount;
+      if (totalAbsentEl) totalAbsentEl.textContent = absentCount;
+      if (attendanceRateEl) attendanceRateEl.textContent = rate + "%";
+      
+      // Update session history stats if on that tab
+      updateSessionHistoryStatsFromSummary(stats);
+      
+      return; // Exit early if we got comprehensive data
+    }
+  } catch (error) {
+    console.warn('Failed to load session summary stats, using local data:', error);
+  }
+
+  // Fallback to local data only
   const totalCount = totalPresent + totalAbsent;
   const rate =
     totalCount > 0 ? ((totalPresent / totalCount) * 100).toFixed(1) : 0;
 
-  document.getElementById("totalStudents").textContent = totalCount;
-  document.getElementById("totalPresent").textContent = totalPresent;
-  document.getElementById("totalAbsent").textContent = totalAbsent;
-  document.getElementById("attendanceRate").textContent = rate + "%";
+  // Update Reports section statistics with null checks
+  const totalStudentsEl = document.getElementById("totalStudents");
+  const totalPresentEl = document.getElementById("totalPresent");
+  const totalAbsentEl = document.getElementById("totalAbsent");
+  const attendanceRateEl = document.getElementById("attendanceRate");
+  
+  if (totalStudentsEl) totalStudentsEl.textContent = totalCount;
+  if (totalPresentEl) totalPresentEl.textContent = totalPresent;
+  if (totalAbsentEl) totalAbsentEl.textContent = totalAbsent;
+  if (attendanceRateEl) attendanceRateEl.textContent = rate + "%";
+}
 
-  if (totalCount === 0) {
-    document.getElementById("attendanceTableBody").innerHTML =
-      '<tr><td colspan="7" style="text-align: center; color: #999">No attendance records found</td></tr>';
-    return;
-  }
-
-  populateFilterDropdowns();
-  filteredRecords = [...allRecords];
-  currentPage = 1;
-  renderTablePage();
+// Update session history stats from summary data
+function updateSessionHistoryStatsFromSummary(stats) {
+  // Update session history statistics if elements exist
+  const totalSessionsEl = document.getElementById('totalSessions');
+  const totalStudentsHistEl = document.getElementById('totalStudentsHist');
+  const avgAttendanceRateEl = document.getElementById('avgAttendanceRate');
+  const totalScansEl = document.getElementById('totalScans');
+  
+  if (totalSessionsEl) totalSessionsEl.textContent = stats.totalSessions || 0;
+  if (totalStudentsHistEl) totalStudentsHistEl.textContent = stats.totalStudents || 0;
+  if (avgAttendanceRateEl) avgAttendanceRateEl.textContent = (stats.averageAttendanceRate || 0).toFixed(1) + '%';
+  if (totalScansEl) totalScansEl.textContent = stats.totalScans || 0;
 }
 
 // Populate Attendance Table
@@ -1581,6 +1629,10 @@ window.addEventListener("DOMContentLoaded", () => {
   if (autoScanStatus) {
     autoScanStatus.style.display = 'none';
   }
+  
+  // Initialize session history and load stats immediately
+  initSessionHistory();
+  loadSessionHistoryStats();
 });
 
 function initSocket() {
@@ -1589,6 +1641,9 @@ function initSocket() {
     return;
   }
   socket = io(BACKEND_CONFIG.URL);
+  socket.on("disconnect", () => {
+    console.log("socket disconnected");
+  });
   socket.on("connect", () => {
     console.log("socket connected");
     const coordinatorId = getCoordinatorId();
@@ -1663,6 +1718,41 @@ function initSocket() {
       `,
       showConfirmButton: false,
       timer: 4000,
+    });
+  });
+
+  // Listen for session summary creation events
+  socket.on("sessionSummaryCreated", (data) => {
+    console.log("sessionSummaryCreated event", data);
+    
+    // Update reports section with new comprehensive data
+    updateReportStats();
+    
+    // Refresh session history if on that tab
+    const activeTab = document.querySelector('.tab-content.active');
+    if (activeTab && activeTab.id === 'session-history') {
+      loadSessionHistory();
+      loadSessionHistoryStats();
+    }
+    
+    // Show notification for session completion
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: `Session Completed: ${data.course}`,
+      html: `
+        <div style="text-align: left;">
+          <div><strong>Date:</strong> ${new Date(data.date).toLocaleDateString()}</div>
+          <div><strong>Attendance Rate:</strong> ${data.attendanceRate.toFixed(1)}%</div>
+          <div><strong>Total Scans:</strong> ${data.totalScansPerformed}</div>
+          <div style="color: #28a745; margin-top: 0.5rem;">
+            <i class="fas fa-check-circle"></i> Session summary saved
+          </div>
+        </div>
+      `,
+      showConfirmButton: false,
+      timer: 5000,
     });
   });
 }
@@ -1982,4 +2072,251 @@ async function loadSessionResults(sessionId) {
     console.error("Error loading session results:", err);
     Swal.fire("Error", "Failed to load session results", "error");
   }
+}
+
+// Session History Management
+let historyCurrentPage = 1;
+let historyTotalPages = 1;
+let historyFilters = {};
+
+function initSessionHistory() {
+  // Load session history when tab is shown
+  document.addEventListener('click', (e) => {
+    if (e.target.matches('[data-tab="session-history"]')) {
+      loadSessionHistory();
+      loadSessionHistoryStats();
+    }
+  });
+  
+  // Filter buttons
+  const applyFiltersBtn = document.getElementById('applyHistoryFilters');
+  if (applyFiltersBtn) {
+    applyFiltersBtn.addEventListener('click', () => {
+      historyFilters = {
+        dateFrom: document.getElementById('historyDateFrom')?.value || '',
+        dateTo: document.getElementById('historyDateTo')?.value || '',
+        department: document.getElementById('historyDepartment')?.value || '',
+        course: document.getElementById('historyCourse')?.value || ''
+      };
+      historyCurrentPage = 1;
+      loadSessionHistory();
+      loadSessionHistoryStats();
+    });
+  }
+  
+  const clearFiltersBtn = document.getElementById('clearHistoryFilters');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', () => {
+      document.getElementById('historyDateFrom').value = '';
+      document.getElementById('historyDateTo').value = '';
+      document.getElementById('historyDepartment').value = '';
+      document.getElementById('historyCourse').value = '';
+      historyFilters = {};
+      historyCurrentPage = 1;
+      loadSessionHistory();
+      loadSessionHistoryStats();
+    });
+  }
+  
+  // Pagination buttons
+  const prevBtn = document.getElementById('historyPrevBtn');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (historyCurrentPage > 1) {
+        historyCurrentPage--;
+        loadSessionHistory();
+      }
+    });
+  }
+  
+  const nextBtn = document.getElementById('historyNextBtn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (historyCurrentPage < historyTotalPages) {
+        historyCurrentPage++;
+        loadSessionHistory();
+      }
+    });
+  }
+}
+
+async function loadSessionHistory() {
+  try {
+    const params = new URLSearchParams({
+      page: historyCurrentPage,
+      limit: 10,
+      ...historyFilters
+    });
+    
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries?${params}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load session history');
+    
+    const data = await response.json();
+    renderSessionHistory(data.summaries);
+    updateHistoryPagination(data.currentPage, data.totalPages);
+  } catch (error) {
+    console.error('Error loading session history:', error);
+    const tbody = document.getElementById('sessionHistoryTableBody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #dc3545;">Error loading session history</td></tr>';
+    }
+  }
+}
+
+async function loadSessionHistoryStats() {
+  try {
+    const params = new URLSearchParams(historyFilters);
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries/stats?${params}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load session statistics');
+    
+    const stats = await response.json();
+    renderSessionHistoryStats(stats);
+  } catch (error) {
+    console.error('Error loading session statistics:', error);
+  }
+}
+
+function renderSessionHistory(summaries) {
+  const tbody = document.getElementById('sessionHistoryTableBody');
+  if (!tbody) return;
+  
+  if (!summaries || summaries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999;">No session history found</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = summaries.map(summary => {
+    const date = new Date(summary.date).toLocaleDateString();
+    const departments = summary.departments.slice(0, 2).join(', ') + 
+      (summary.departments.length > 2 ? ` +${summary.departments.length - 2}` : '');
+    const rate = summary.attendanceRate.toFixed(1);
+    
+    return `
+      <tr>
+        <td>${date}</td>
+        <td>${summary.course}</td>
+        <td>${summary.startTime} - ${summary.endTime}</td>
+        <td>${departments}</td>
+        <td>${summary.totalStudents}</td>
+        <td style="color: #28a745;">${summary.presentStudents}</td>
+        <td style="color: #dc3545;">${summary.absentStudents}</td>
+        <td style="color: ${rate >= 80 ? '#28a745' : rate >= 60 ? '#ffc107' : '#dc3545'};">
+          ${rate}%
+        </td>
+        <td>${summary.totalScansPerformed}</td>
+        <td>
+          <button class="btn-custom btn-primary-custom" onclick="viewSessionDetails('${summary._id}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderSessionHistoryStats(stats) {
+  // Update session history statistics if elements exist
+  const totalSessionsEl = document.getElementById('totalSessions');
+  const totalStudentsHistEl = document.getElementById('totalStudentsHist');
+  const avgAttendanceRateEl = document.getElementById('avgAttendanceRate');
+  const totalScansEl = document.getElementById('totalScans');
+  
+  if (totalSessionsEl) totalSessionsEl.textContent = stats.totalSessions || 0;
+  if (totalStudentsHistEl) totalStudentsHistEl.textContent = stats.totalStudents || 0;
+  if (avgAttendanceRateEl) avgAttendanceRateEl.textContent = (stats.averageAttendanceRate || 0).toFixed(1) + '%';
+  if (totalScansEl) totalScansEl.textContent = stats.totalScans || 0;
+}
+
+function updateHistoryPagination(currentPage, totalPages) {
+  historyCurrentPage = currentPage;
+  historyTotalPages = totalPages;
+  
+  const pageInfo = document.getElementById('historyPageInfo');
+  const prevBtn = document.getElementById('historyPrevBtn');
+  const nextBtn = document.getElementById('historyNextBtn');
+  
+  if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = currentPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+}
+
+async function viewSessionDetails(summaryId) {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries/${summaryId}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load session details');
+    
+    const summary = await response.json();
+    showSessionDetailsModal(summary);
+  } catch (error) {
+    console.error('Error loading session details:', error);
+    Swal.fire('Error', 'Failed to load session details', 'error');
+  }
+}
+
+function showSessionDetailsModal(summary) {
+  const date = new Date(summary.date).toLocaleDateString();
+  const departments = summary.departments.join(', ');
+  const recordsHtml = summary.attendanceRecords.map(record => `
+    <tr>
+      <td>${record.name}</td>
+      <td>${record.department}</td>
+      <td>${record.presentCount}/${record.totalScans}</td>
+      <td>${record.attendancePercentage.toFixed(1)}%</td>
+      <td><span class="badge ${record.status === 'present' ? 'bg-success' : 'bg-danger'}">${record.status}</span></td>
+    </tr>
+  `).join('');
+  
+  Swal.fire({
+    title: `<strong>${summary.course}</strong> Session Details`,
+    html: `
+      <div style="text-align: left;">
+        <p><strong>Date:</strong> ${date}</p>
+        <p><strong>Time:</strong> ${summary.startTime} - ${summary.endTime}</p>
+        <p><strong>Departments:</strong> ${departments}</p>
+        <p><strong>Total Students:</strong> ${summary.totalStudents}</p>
+        <p><strong>Present:</strong> ${summary.presentStudents} (${summary.attendanceRate.toFixed(1)}%)</p>
+        <p><strong>Absent:</strong> ${summary.absentStudents}</p>
+        <p><strong>Total Scans:</strong> ${summary.totalScansPerformed}</p>
+        
+        <h6 style="margin-top: 1rem; margin-bottom: 0.5rem;">Student Attendance:</h6>
+        <div style="max-height: 300px; overflow-y: auto;">
+          <table style="width: 100%; font-size: 0.9rem;">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Scans</th>
+                <th>Rate</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${recordsHtml}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `,
+    width: '800px',
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#007bff'
+  });
 }
