@@ -187,6 +187,10 @@ async function performScanForSession(session, connectedMacs = []) {
 }
 
 // Controller to handle attendance scanning
+// Rate limiting to prevent too many scans
+const scanCooldowns = new Map(); // sessionId -> last scan time
+const COOLDOWN_PERIOD = 30 * 1000; // 30 seconds minimum between scans
+
 const scanAttendance = async (req, res) => {
   try {
     const { sessionId } = req.body;
@@ -208,6 +212,19 @@ const scanAttendance = async (req, res) => {
     if (now > endDatetime) {
       return res.status(400).json({ message: "Session has already ended" });
     }
+
+    // Check cooldown
+    const lastScanTime = scanCooldowns.get(sessionId);
+    if (lastScanTime && (now - lastScanTime) < COOLDOWN_PERIOD) {
+      const remainingTime = Math.ceil((COOLDOWN_PERIOD - (now - lastScanTime)) / 1000);
+      return res.status(429).json({ 
+        message: `Please wait ${remainingTime} seconds before scanning again`,
+        cooldown: remainingTime
+      });
+    }
+
+    // Update cooldown
+    scanCooldowns.set(sessionId, now);
 
     const connectedMacs = req.body.connectedMacs;
     const result = await performScanForSession(session, connectedMacs);
@@ -231,6 +248,10 @@ const scanAttendance = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in scanAttendance:", err);
+    // Clear cooldown on error
+    if (sessionId) {
+      scanCooldowns.delete(sessionId);
+    }
     return res
       .status(500)
       .json({ message: "Server error during attendance scanning" });

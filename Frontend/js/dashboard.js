@@ -971,6 +971,31 @@ async function scanSession(sessionId) {
     });
 
     const data = await res.json();
+    
+    // Handle cooldown error
+    if (res.status === 429) {
+      resultsContainer.innerHTML = `<div style="padding: 1rem; color: #856404; background: #fff3cd; border-radius: 4px;">
+        <i class="fas fa-clock"></i> ${data.message}
+      </div>`;
+      
+      // Show countdown if cooldown time provided
+      if (data.cooldown) {
+        let remainingTime = data.cooldown;
+        const countdownInterval = setInterval(() => {
+          remainingTime--;
+          if (remainingTime <= 0) {
+            clearInterval(countdownInterval);
+            resultsContainer.innerHTML = '';
+            return;
+          }
+          resultsContainer.innerHTML = `<div style="padding: 1rem; color: #856404; background: #fff3cd; border-radius: 4px;">
+            <i class="fas fa-clock"></i> Please wait ${remainingTime} seconds before scanning again
+          </div>`;
+        }, 1000);
+      }
+      throw new Error(data.message);
+    }
+    
     if (!res.ok)
       throw new Error((data && data.message) || "Attendance scan failed");
 
@@ -989,7 +1014,9 @@ async function scanSession(sessionId) {
     return { presentArr, absentArr, counts };
   } catch (err) {
     console.error("Scan error:", err);
-    resultsContainer.innerHTML = `<div style="padding: 1rem; color: #721c24; background: #f8d7da; border-radius: 4px;">Error: ${err.message || err}</div>`;
+    if (!err.message.includes('Please wait')) {
+      resultsContainer.innerHTML = `<div style="padding: 1rem; color: #721c24; background: #f8d7da; border-radius: 4px;">Error: ${err.message || err}</div>`;
+    }
     throw err;
   }
 }
@@ -1579,9 +1606,8 @@ function openEditSessionModal(session) {
   document.getElementById("editEndTime").value = session.endTime;
   document.getElementById("editInterval").value = session.interval || 5;
 
-  const modal = new bootstrap.Modal(
-    document.getElementById("editSessionModal"),
-  );
+  const modalElement = document.getElementById("editSessionModal");
+  const modal = new bootstrap.Modal(modalElement);
   modal.show();
 }
 

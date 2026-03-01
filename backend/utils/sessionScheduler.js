@@ -9,6 +9,13 @@ const timers = {};
 
 function scheduleSession(session) {
   if (!session || !session._id) return;
+  
+  // Check if already scheduled to prevent duplicates
+  if (timers[session._id]) {
+    console.log(`Session ${session._id} already scheduled, skipping`);
+    return;
+  }
+  
   const now = new Date();
   const dateString =
     session.date instanceof Date
@@ -17,19 +24,18 @@ function scheduleSession(session) {
   const start = new Date(`${dateString}T${session.startTime}`);
   const end = new Date(`${dateString}T${session.endTime}`);
 
-  // clear existing timers
-  cancelSessionSchedule(session._id);
-
   if (end <= now) {
     // already finished
     return;
   }
 
   const intervalMinutes = session.interval || 0;
+  console.log(`Scheduling session ${session._id} (${session.course}) - Start: ${start}, End: ${end}, Interval: ${intervalMinutes}min`);
 
   // when start time arrives, emit event and optionally perform first scan
   const startDelay = Math.max(0, start - now);
   const startTimer = setTimeout(async () => {
+    console.log(`Session ${session._id} started, performing initial scan`);
     const io = getIO();
     if (io) {
       io.to(`coordinator_${session.coordinator}`).emit(
@@ -42,38 +48,59 @@ function scheduleSession(session) {
 
     // if an interval is defined schedule further scans
     if (intervalMinutes > 0) {
+      console.log(`Setting up interval scans every ${intervalMinutes} minutes for session ${session._id}`);
       const intervalId = setInterval(
         async () => {
           const now2 = new Date();
-          if (now2 > end) {
+          if (now2 >= end) {
+            console.log(`Session ${session._id} ended, stopping interval scans`);
             clearInterval(intervalId);
+            delete timers[session._id];
             return;
           }
+          console.log(`Performing scheduled scan for session ${session._id}`);
           await performScanAndEmit(session);
         },
         intervalMinutes * 60 * 1000,
       );
-      timers[session._id] = { intervalId };
+      // Store the interval timer
+      if (!timers[session._id]) {
+        timers[session._id] = {};
+      }
+      timers[session._id].intervalId = intervalId;
     }
   }, startDelay);
 
-  timers[session._id] = { startTimer };
+  // Store the start timer
+  if (!timers[session._id]) {
+    timers[session._id] = {};
+  }
+  timers[session._id].startTimer = startTimer;
 }
 
 async function performScanAndEmit(session) {
   try {
-    const result = await performScanForSession(session);
+    // Check if session still exists and is valid
+    const currentSession = await Session.findById(session._id);
+    if (!currentSession) {
+      console.log(`Session ${session._id} no longer exists, cancelling schedule`);
+      cancelSessionSchedule(session._id);
+      return;
+    }
+    
+    const result = await performScanForSession(currentSession);
     const io = getIO();
     if (io) {
-      io.to(`coordinator_${session.coordinator}`).emit("scanResult", {
-        sessionId: session._id,
-        course: session.course,
+      io.to(`coordinator_${currentSession.coordinator}`).emit("scanResult", {
+        sessionId: currentSession._id,
+        course: currentSession.course,
         timestamp: new Date(),
         ...result,
       });
     }
   } catch (err) {
-    console.error("Error during scheduled scan for session", session._id, err);
+    console.error("Error during scheduled scan for session", session._id, err.message);
+    // Don't cancel the schedule on error, just log it
   }
 }
 
@@ -86,14 +113,59 @@ function cancelSessionSchedule(sessionId) {
   }
 }
 
+function cancelAllSchedules() {
+  Object.keys(timers).forEach(sessionId => {
+    cancelSessionSchedule(sessionId);
+  });
+  console.log('All session schedules cancelled');
+}
+
 async function initSchedules() {
   try {
     const now = new Date();
+    // Only schedule sessions that haven't ended yet
     const sessions = await Session.find({ endTime: { $gt: now } });
-    sessions.forEach((s) => scheduleSession(s));
+    console.log(`Found ${sessions.length} upcoming/active sessions to schedule`);
+    
+    sessions.forEach((s) => {
+      const dateString = s.date instanceof Date 
+        ? s.date.toISOString().split("T")[0] 
+        : s.date.split("T")[0];
+      const start = new Date(`${dateString}T${s.startTime}`);
+      const end = new Date(`${dateString}T${s.endTime}`);
+      
+      // Only schedule if session hasn't started yet or is currently active
+      if (start <= now && now < end) {
+        console.log(`Session ${s._id} is currently active, scheduling immediate scan`);
+        // For already active sessions, start scanning immediately
+        performScanAndEmit(s);
+        
+        // Set up interval if needed
+        if (s.interval > 0) {
+          const intervalId = setInterval(
+            async () => {
+              const now2 = new Date();
+              if (now2 >= end) {
+                console.log(`Session ${s._id} ended, stopping interval scans`);
+                clearInterval(intervalId);
+                delete timers[s._id];
+                return;
+              }
+              console.log(`Performing scheduled scan for active session ${s._id}`);
+              await performScanAndEmit(s);
+            },
+            s.interval * 60 * 1000,
+          );
+          timers[s._id] = { intervalId };
+        }
+      } else if (start > now) {
+        // Schedule upcoming sessions normally
+        scheduleSession(s);
+      }
+    });
   } catch (err) {
     console.error("Failed to initialize session schedules", err);
   }
 }
 
-module.exports = { scheduleSession, cancelSessionSchedule, initSchedules };
+module.exports = { scheduleSession, cancelSessionSchedule, cancelAllSchedules, initSchedules };

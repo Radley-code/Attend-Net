@@ -25,7 +25,7 @@ const { setIO } = require("./utils/socket");
 const { initSchedules } = require("./utils/sessionScheduler");
 
 mongoose
-  .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(uri)
   .then(() => {
     console.log("MongoDB connected");
 
@@ -103,5 +103,20 @@ app.use("/api/coordinator", loginRoutes);
 // Import admin routes
 const adminRoutes = require("./routes/adminRoutes");
 app.use("/api/admin", adminRoutes);
+
+// Graceful shutdown handling
+const { cancelAllSchedules } = require("./utils/sessionScheduler");
+
+process.on('SIGINT', () => {
+  console.log('\nReceived SIGINT, shutting down gracefully...');
+  cancelAllSchedules();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\nReceived SIGTERM, shutting down gracefully...');
+  cancelAllSchedules();
+  process.exit(0);
+});
 
 module.exports = app;
