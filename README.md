@@ -256,6 +256,11 @@ The system uses network-based MAC address detection. Ensure:
 - `POST /api/coordinator/login` - Coordinator login
 - `POST /api/coordinator/register` - Register new coordinator
 
+### Session Summary
+- `POST /api/session-summary/create` - Create session summary (protected)
+- `GET /api/session-summary/session/:id` - Get session summary (protected)
+
+
 ## 🔧 Troubleshooting
 
 ### Common Issues
@@ -301,7 +306,7 @@ This project is licensed under the ISC License - see the package.json file for d
 
 For support and questions:
 - Create an issue in the repository
-- Contact the development team
+- Contact the development team(check out the link in bio)
 - Check the troubleshooting section above
 
 ---
