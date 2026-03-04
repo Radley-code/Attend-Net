@@ -8,11 +8,11 @@ const CURRENT_PORT = window.location.port;
 // Backend server configuration
 const BACKEND_CONFIG = {
   // Auto-detect based on current page location
-  // If on localhost, use localhost; otherwise use 192.168.1.101
+  // If on localhost, use localhost; otherwise use current host
   HOST:
     CURRENT_HOST === "localhost" || CURRENT_HOST === "127.0.0.1"
       ? "localhost"
-      : "192.168.1.101",
+      : CURRENT_HOST, // Use current host instead of hardcoded IP
   PORT: 3000,
 
   // Get the full backend URL

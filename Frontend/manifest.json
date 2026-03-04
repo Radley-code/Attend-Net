@@ -1,0 +1,41 @@
+{
+  "name": "AttendNet",
+  "short_name": "AttendNet",
+  "description": "School Attendance Tracking System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "apple-touch-icon-120x120.svg",
+      "sizes": "120x120",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "apple-touch-icon-152x152.svg",
+      "sizes": "152x152",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "apple-touch-icon-167x167.svg",
+      "sizes": "167x167",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "apple-touch-icon-180x180.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ]
+}
