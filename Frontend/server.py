@@ -103,14 +103,14 @@ if __name__ == "__main__":
         
         local_ip = get_local_ip()
         
-        print(f"Server running at:")
+        print(f"Server running at:") #shows server running
         print(f"  Local:   http://localhost:{PORT}")
-        print(f"  Network: http://{local_ip}:{PORT}")
-        print(f"  Files:   {os.path.abspath(DIRECTORY)}")
+        print(f"  Network: http://{local_ip}:{PORT}") # port which the server is running on
+        print(f"  Files:   {os.path.abspath(DIRECTORY)}") #absolute from local machine
         print("\nPress Ctrl+C to stop the server")
         
         try:
                 httpd.serve_forever()
         except KeyboardInterrupt:
                 print("\nServer stopped.")
-                httpd.server_close()
+                httpd.server_close() #to shut down the server
