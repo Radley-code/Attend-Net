@@ -153,53 +153,55 @@ themeToggle.addEventListener("click", () => {
   localStorage.setItem("theme", theme);
 });
 
-// Mobile Menu Toggle
-const hamburgerBtn = document.getElementById("hamburgerBtn");
-const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
-const navTabs = document.getElementById("navbarTabs");
+// Navigation System - New Tab Management
+const navigationTabs = document.getElementById("navigationTabs");
 const profileMenuBtn = document.getElementById("profileMenuBtn");
 const profileDropdown = document.getElementById("profileDropdown");
 
-hamburgerBtn.addEventListener("click", () => {
-  hamburgerBtn.classList.toggle("active");
-  mobileMenuOverlay.classList.toggle("active");
-  navTabs.classList.toggle("active");
-});
+// Profile dropdown functionality
+if (profileMenuBtn && profileDropdown) {
+  profileMenuBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    profileDropdown.classList.toggle("active");
+  });
 
-// Close mobile menu when clicking overlay
-mobileMenuOverlay.addEventListener("click", () => {
-  hamburgerBtn.classList.remove("active");
-  mobileMenuOverlay.classList.remove("active");
-  navTabs.classList.remove("active");
-});
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!profileMenuBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+      profileDropdown.classList.remove("active");
+    }
+  });
 
-// Profile dropdown menu
-profileMenuBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  profileDropdown.classList.toggle("active");
-});
+  // Close dropdown when clicking on dropdown items
+  const dropdownItems = profileDropdown.querySelectorAll(".dropdown-item");
+  dropdownItems.forEach(item => {
+    item.addEventListener("click", () => {
+      profileDropdown.classList.remove("active");
+    });
+  });
+}
 
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".navbar-right")) {
-    profileDropdown.classList.remove("active");
-  }
-});
-
-// Tab Navigation
-const navLinks = document.querySelectorAll(".nav-link");
+// Tab switching functionality
+const navTabs = document.querySelectorAll(".nav-tab");
 const tabContents = document.querySelectorAll(".tab-content");
 
-navLinks.forEach((link) => {
-  link.addEventListener("click", (e) => {
+navTabs.forEach((tab) => {
+  tab.addEventListener("click", (e) => {
     e.preventDefault();
-    const tabName = link.getAttribute("data-tab");
-    switchTab(tabName);
-
-    // Close mobile menu after tab selection
-    if (window.innerWidth <= 768) {
-      hamburgerBtn.classList.remove("active");
-      mobileMenuOverlay.classList.remove("active");
-      navTabs.classList.remove("active");
+    
+    // Remove active class from all tabs and contents
+    navTabs.forEach((t) => t.classList.remove("active"));
+    tabContents.forEach((content) => content.classList.remove("active"));
+    
+    // Add active class to clicked tab
+    tab.classList.add("active");
+    
+    // Show corresponding content
+    const tabId = tab.getAttribute("data-tab");
+    const tabContent = document.getElementById(tabId);
+    if (tabContent) {
+      tabContent.classList.add("active");
     }
   });
 });
@@ -209,7 +211,7 @@ function switchTab(tabName) {
   tabContents.forEach((tab) => tab.classList.remove("active"));
 
   // Remove active class from all links
-  navLinks.forEach((link) => link.classList.remove("active"));
+  navTabs.forEach((link) => link.classList.remove("active"));
 
   // Show selected tab
   document.getElementById(tabName).classList.add("active");

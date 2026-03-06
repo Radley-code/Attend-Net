@@ -33,30 +33,15 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body>
-    <!-- Navbar -->
-    <div class="navbar-custom">
-      <div class="navbar-left">
-        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <div class="navbar-tabs" id="navbarTabs">
-          <a href="#" class="nav-link" data-tab="reports">
-            <i class="fas fa-chart-bar"></i> <span>Reports</span>
-          </a>
-          <a href="#" class="nav-link" data-tab="session-history">
-            <i class="fas fa-history"></i> <span>Session History</span>
-          </a>
-          <a href="#" class="nav-link" data-tab="sessions">
-            <i class="fas fa-calendar"></i> <span>Sessions</span>
-          </a>
-          <a href="#" class="nav-link" data-tab="settings">
-            <i class="fas fa-cog"></i> <span>Settings</span>
-          </a>
+    <!-- Top Bar - Logo and User Info -->
+    <div class="top-navbar">
+      <div class="top-navbar-left">
+        <div class="app-logo">
+          <i class="fas fa-network-wired"></i>
+          <span>AttendNet</span>
         </div>
       </div>
-      <div class="navbar-right">
+      <div class="top-navbar-right">
         <div class="coordinator-info">
           <div class="coordinator-profile">
             <div class="profile-avatar" id="profileAvatar">
@@ -93,6 +78,28 @@
         </a>
         <a href="#" class="dropdown-item" id="logoutLink">
           <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation - Menu Tabs -->
+    <div class="bottom-navbar">
+      <div class="navigation-tabs" id="navigationTabs">
+        <a href="#" class="nav-tab active" data-tab="reports">
+          <i class="fas fa-chart-bar"></i>
+          <span>Reports</span>
+        </a>
+        <a href="#" class="nav-tab" data-tab="session-history">
+          <i class="fas fa-history"></i>
+          <span>Session History</span>
+        </a>
+        <a href="#" class="nav-tab" data-tab="sessions">
+          <i class="fas fa-calendar"></i>
+          <span>Sessions</span>
+        </a>
+        <a href="#" class="nav-tab" data-tab="settings">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
         </a>
       </div>
     </div>

@@ -11,7 +11,7 @@ body {
     Arial, sans-serif;
 }
 
-/*theme handler*/
+/* Dark Theme Support - New Navigation */
 body.dark-theme {
   background-color: #121212;
   color: #e0e0e0;
@@ -22,10 +22,134 @@ body.dark-theme {
   }
 }
 
-/* Navbar */
-.navbar-custom {
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.dark-theme .navbar-custom {
+  background-color: #1e1e1e;
+  border-top-color: #333;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+  border-bottom-color: transparent;
+}
+
+.dark-theme .top-navbar {
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .bottom-navbar {
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .bottom-navbar .navigation-tabs {
+  background: rgba(42, 42, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .navigation-tabs {
+  background: rgba(42, 42, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .nav-tab {
+  background: rgba(66, 66, 66, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #b0b0b0;
+}
+
+.dark-theme .nav-tab:hover {
+  background: rgba(74, 158, 255, 0.2);
+  color: #4a9eff;
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+}
+
+.dark-theme .nav-tab.active {
+  background: rgba(74, 158, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: white;
+  box-shadow: 0 4px 16px rgba(74, 158, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark-theme .app-logo i,
+.dark-theme .app-logo span {
+  background: linear-gradient(135deg, #4a9eff 0%, #0066cc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-theme .navigation-tabs {
+  background: #2a2a2a;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .nav-tab {
+  color: #b0b0b0;
+}
+
+.dark-theme .nav-tab:hover {
+  color: #4a9eff;
+  background: rgba(74, 158, 255, 0.1);
+}
+
+.dark-theme .nav-tab.active {
+  background: #4a9eff;
+  color: white;
+  box-shadow: 0 2px 8px rgba(74, 158, 255, 0.4);
+}
+
+.dark-theme .nav-tab.active i {
+  color: white;
+}
+
+.dark-theme .coordinator-name {
+  color: #e0e0e0;
+}
+
+.dark-theme .coordinator-email {
+  color: #b0b0b0;
+}
+
+.dark-theme .profile-avatar {
+  background: linear-gradient(135deg, #4a9eff 0%, #0066cc 100%);
+}
+
+.dark-theme .profile-dropdown {
+  background: #2d3748;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .dropdown-item {
+  color: #e2e8f0;
+  border-bottom-color: #4a5568;
+}
+
+.dark-theme .dropdown-item:hover {
+  background-color: #4a5568;
+  color: #4a9eff;
+}
+
+/* Top Navbar - Logo and User Info with Glass Effect */
+.top-navbar {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
@@ -35,77 +159,152 @@ body.dark-theme {
   z-index: 1000;
 }
 
-.navbar-left {
+.top-navbar-left {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  flex: 1;
+  flex: 0 0 auto;
 }
 
-.navbar-right {
+.top-navbar-right {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  flex: 0 0 auto;
 }
 
-.hamburger-btn {
-  display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.5rem;
+/* Bottom Navbar - Navigation Tabs with Glass Effect */
+.bottom-navbar {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
 }
 
-.hamburger-btn span {
-  width: 25px;
-  height: 3px;
-  background-color: #333;
-  border-radius: 2px;
-  transition: all 0.3s ease;
-  display: block;
-}
-
-.hamburger-btn.active span:nth-child(1) {
-  transform: rotate(45deg) translate(8px, 8px);
-}
-
-.hamburger-btn.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger-btn.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(8px, -8px);
-}
-
-.navbar-tabs {
+.bottom-navbar .navigation-tabs {
   display: flex;
-  gap: 2rem;
+  justify-content: center;
+  background: rgba(248, 249, 250, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 0.25rem;
+  gap: 0.25rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin: 0.75rem 2rem;
 }
 
-.navbar-tabs a {
+/* Adjust main container for split navigation */
+.main-container {
+  padding-top: 0;
+  padding-bottom: 80px;
+  min-height: calc(100vh - 80px);
+}
+
+/* App Logo */
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.app-logo i {
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-logo span {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Navigation Tabs - For Bottom Navbar with Glass Effect */
+.navigation-tabs {
+  display: flex;
+  background: rgba(248, 249, 250, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 0.25rem;
+  gap: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
   text-decoration: none;
   color: #666;
   font-weight: 500;
-  padding-bottom: 0.5rem;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
   white-space: nowrap;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.navbar-tabs a.active {
+.nav-tab:hover {
   color: #007bff;
-  border-bottom-color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
 }
 
-.navbar-tabs a:hover {
-  color: #007bff;
+.nav-tab.active {
+  background: rgba(0, 123, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3);
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.nav-tab i {
+  font-size: 1rem;
+}
+
+.nav-tab.active i {
+  color: white;
+}
+
+/* Remove hamburger menu styles */
+.hamburger-btn {
+  display: none !important;
+}
+
+.navbar-tabs {
+  display: none !important;
 }
 
 .coordinator-info {
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .coordinator-profile {
@@ -163,8 +362,8 @@ body.dark-theme {
 
 .profile-dropdown {
   position: absolute;
-  top: 70px;
-  right: 2rem;
+  top: 100%;
+  right: 0;
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -173,6 +372,7 @@ body.dark-theme {
   z-index: 1002;
   overflow: hidden;
   animation: slideDown 0.2s ease-out;
+  margin-top: 0.5rem;
 }
 
 .profile-dropdown.active {
@@ -198,6 +398,16 @@ body.dark-theme {
   color: #333;
   text-decoration: none;
   border-bottom: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #007bff;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
 }
 
 /* radio group for scan mode selection */
@@ -679,66 +889,57 @@ tbody tr:hover {
   text-decoration: underline;
 }
 
-/* Mobile Responsive */
+/* Mobile Responsive - Split Navigation */
 @media (max-width: 768px) {
-  .navbar-custom {
-    padding: 1rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+  .top-navbar {
+    padding: 0.75rem 1rem;
   }
 
-  .navbar-left {
+  .top-navbar-left {
+    flex: 0 0 auto;
+  }
+
+  .top-navbar-right {
     gap: 1rem;
-    order: 1;
-    width: 100%;
   }
 
-  .hamburger-btn {
-    display: flex;
+  .bottom-navbar .navigation-tabs {
+    margin: 0.75rem 1rem;
+    padding: 0.3rem;
+    gap: 0.3rem;
+    background: rgba(248, 249, 250, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.05);
   }
 
-  .navbar-tabs {
+  .nav-tab {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+    gap: 0.4rem;
+    min-width: 50px;
+    min-height: 50px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .nav-tab span {
     display: none;
-    flex-direction: column;
-    position: fixed;
-    top: 70px;
-    left: -100%;
-    background: white;
-    width: 60%;
-    max-width: 250px;
-    gap: 0;
-    z-index: 1001;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    height: calc(100vh - 70px);
-    overflow-y: auto;
-    transition: left 0.3s ease;
   }
 
-  .navbar-tabs.active {
-    display: flex !important;
-    left: 0;
+  .nav-tab i {
+    font-size: 1.1rem;
   }
 
-  .navbar-tabs a {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e0e0e0;
-    border-left: 4px solid transparent;
-    justify-content: flex-start;
+  .app-logo {
+    font-size: 1.2rem;
   }
 
-  .navbar-tabs a.active {
-    background-color: #f0f0f0;
-    border-left-color: #007bff;
-    border-bottom-color: #e0e0e0;
-  }
-
-  .navbar-tabs a span {
-    margin-left: 0.5rem;
-  }
-
-  .navbar-right {
-    order: 2;
-    width: 100%;
+  .app-logo i {
+    font-size: 1.4rem;
   }
 
   .coordinator-info {
@@ -749,19 +950,25 @@ tbody tr:hover {
     font-size: 0.85rem;
   }
 
-  .mobile-menu-overlay {
-    display: none;
-    position: fixed;
-    top: 70px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+  .coordinator-email {
+    font-size: 0.7rem;
+    display: block; /* Show email on mobile */
   }
 
-  .mobile-menu-overlay.active {
-    display: block;
+  .coordinator-details {
+    display: block; /* Show full details on mobile */
+  }
+
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust main container padding for mobile */
+  .main-container {
+    padding-bottom: 80px;
+    min-height: calc(100vh - 80px);
   }
 
   .page-title {
@@ -818,98 +1025,155 @@ tbody tr:hover {
   .welcome-subtitle {
     font-size: 0.9rem;
   }
+}
 
-  @media (max-width: 480px) {
-    .navbar-custom {
-      padding: 0.75rem 1rem;
-    }
+/* Tablet Responsive */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .navbar-center {
+    max-width: 500px;
+  }
 
-    .navbar-left {
-      gap: 0.5rem;
-    }
+  .nav-tab {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
 
-    .page-title {
-      font-size: 1.25rem;
-    }
+  .app-logo {
+    font-size: 1.3rem;
+  }
+}
 
-    .stats-container {
-      grid-template-columns: 1fr;
-    }
+/* Small Mobile Responsive - Split Navigation */
+@media (max-width: 480px) {
+  .top-navbar {
+    padding: 0.5rem 0.75rem;
+  }
 
-    .stat-card {
-      padding: 1rem;
-    }
+  .top-navbar-right {
+    gap: 0.5rem;
+  }
 
-    .stat-value {
-      font-size: 1.5rem;
-    }
+  .bottom-navbar .navigation-tabs {
+    margin: 0.6rem 0.75rem;
+    gap: 0.2rem;
+    padding: 0.2rem;
+    background: rgba(248, 249, 250, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.05);
+  }
 
-    .stat-label {
-      font-size: 0.8rem;
-    }
+  .nav-tab {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.85rem;
+    min-width: 48px;
+    min-height: 48px;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 
-    .filter-section {
-      padding: 1rem;
-    }
+  .nav-tab i {
+    font-size: 1rem;
+  }
 
-    .table-responsive {
-      font-size: 0.75rem;
-    }
+  .app-logo span {
+    display: none;
+  }
 
-    table {
-      font-size: 0.75rem;
-    }
+  .app-logo {
+    gap: 0.5rem;
+  }
 
-    th,
-    td {
-      padding: 0.4rem;
-    }
+  .coordinator-info {
+    flex: 1;
+  }
 
-    .pagination-btn {
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-    }
+  .coordinator-name {
+    font-size: 0.8rem;
+  }
 
-    .coordinator-name {
-      font-size: 0.75rem;
-    }
+  .coordinator-email {
+    font-size: 0.65rem;
+    display: block; /* Show email on small mobile */
+  }
 
-    .coordinator-email {
-      font-size: 0.65rem;
-    }
+  .coordinator-details {
+    display: block; /* Show full details on small mobile */
+  }
 
-    .profile-avatar {
-      width: 32px;
-      height: 32px;
-      font-size: 0.9rem;
-    }
+  .profile-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
 
-    .profile-menu-btn {
-      padding: 0.25rem;
-    }
+  /* Adjust main container padding for small mobile */
+  .main-container {
+    padding-bottom: 75px;
+    min-height: calc(100vh - 75px);
+  }
 
-    .theme-toggle {
-      padding: 0.25rem;
-      width: 36px;
-      height: 36px;
-    }
+  .page-title {
+    font-size: 1.25rem;
+  }
 
-    .welcome-section {
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
 
-    .welcome-icon {
-      font-size: 1.75rem;
-      margin-bottom: 0.5rem;
-    }
+  .stat-card {
+    padding: 1rem;
+  }
 
-    .welcome-message {
-      font-size: 1.2rem;
-    }
+  .stat-value {
+    font-size: 1.5rem;
+  }
 
-    .welcome-subtitle {
-      font-size: 0.85rem;
-    }
+  .stat-label {
+    font-size: 0.8rem;
+  }
+
+  .filter-section {
+    padding: 1rem;
+  }
+
+  .table-responsive {
+    font-size: 0.75rem;
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+
+  th,
+  td {
+    padding: 0.4rem;
+  }
+
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .welcome-section {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .welcome-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .welcome-message {
+    font-size: 1.2rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.85rem;
   }
 }
