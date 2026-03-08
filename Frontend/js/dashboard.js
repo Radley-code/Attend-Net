@@ -554,11 +554,209 @@ document.getElementById("previewEmailBtn").addEventListener("click", () => {
 
 document.getElementById("exportPdfBtn").addEventListener("click", () => {
   if (filteredRecords.length === 0) {
-    alert("No attendance records to export");
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Data',
+      text: 'No attendance records to export. Please select filters to generate data.',
+      confirmButtonColor: '#007bff'
+    });
     return;
   }
-  alert("PDF export feature coming soon!");
+  
+  // Show loading state
+  Swal.fire({
+    title: 'Generating PDF...',
+    text: 'Please wait while we generate your PDF report.',
+    didOpen: () => {
+      Swal.showLoading();
+    },
+    allowOutsideClick: false,
+    allowEscapeKey: false
+  });
+  
+  try {
+    exportToPDF();
+  } catch (error) {
+    console.error('PDF export failed:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Export Failed',
+      text: 'Failed to generate PDF. Please try again or contact support.',
+      confirmButtonColor: '#dc3545'
+    });
+  }
 });
+
+// PDF Export Functionality
+function exportToPDF() {
+  const { jsPDF } = window.jspdf;
+  
+  // Get current filter values
+  const filterDate = document.getElementById("filterDate").value;
+  const filterCourse = document.getElementById("filterCourse").value;
+  const filterSession = document.getElementById("filterSession").value;
+  
+  // Create PDF document
+  const pdf = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  // Add custom font for better text rendering
+  pdf.setFont('helvetica');
+  
+  // PDF Content
+  let yPosition = 20;
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 15;
+  const contentWidth = pageWidth - (margin * 2);
+  
+  // Header
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('AttendNet - Attendance Report', margin, yPosition);
+  
+  yPosition += 15;
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  
+  // Filter Information
+  let filterInfo = 'Report Filters: ';
+  if (filterDate) filterInfo += `Date: ${filterDate} `;
+  if (filterCourse) filterInfo += `Course: ${filterCourse} `;
+  if (filterSession) filterInfo += `Session: ${filterSession}`;
+  if (filterInfo === 'Report Filters: ') filterInfo = 'All Records';
+  
+  pdf.text(filterInfo, margin, yPosition);
+  yPosition += 12;
+  
+  // Statistics Summary
+  const totalStudents = filteredRecords.length;
+  const presentStudents = filteredRecords.filter(r => r.status === 'Present').length;
+  const absentStudents = filteredRecords.filter(r => r.status === 'Absent').length;
+  const attendanceRate = totalStudents > 0 ? ((presentStudents / totalStudents) * 100).toFixed(1) : 0;
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Summary Statistics:', margin, yPosition);
+  yPosition += 10;
+  
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Total Students: ${totalStudents}`, margin + 5, yPosition);
+  yPosition += 8;
+  pdf.text(`Present: ${presentStudents} (${attendanceRate}%)`, margin + 5, yPosition);
+  yPosition += 8;
+  pdf.text(`Absent: ${absentStudents}`, margin + 5, yPosition);
+  yPosition += 15;
+  
+  // Table Headers
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Attendance Details:', margin, yPosition);
+  yPosition += 10;
+  
+  // Table setup
+  const tableStartY = yPosition;
+  const colWidths = [15, 60, 40, 30, 30, 40, 50, 35];
+  const headers = ['S.No', 'Student Name', 'Department', 'Course', 'Session', 'Status', 'Timestamp', 'Scans'];
+  const rowHeight = 8;
+  
+  // Draw table headers
+  pdf.setFillColor(240, 240, 240);
+  pdf.rect(margin, yPosition, contentWidth, rowHeight);
+  pdf.setTextColor(0, 0, 0);
+  
+  let currentX = margin;
+  headers.forEach((header, index) => {
+    pdf.text(header, currentX + 2, yPosition + 6);
+    currentX += colWidths[index];
+  });
+  
+  yPosition += rowHeight;
+  
+  // Table data
+  pdf.setTextColor(0, 0, 0);
+  filteredRecords.forEach((record, index) => {
+    if (yPosition > pdf.internal.pageSize.getHeight() - 30) {
+      pdf.addPage();
+      yPosition = 20;
+      
+      // Redraw headers on new page
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, yPosition, contentWidth, rowHeight);
+      pdf.setTextColor(0, 0, 0);
+      
+      currentX = margin;
+      headers.forEach((header, headerIndex) => {
+        pdf.text(header, currentX + 2, yPosition + 6);
+        currentX += colWidths[headerIndex];
+      });
+      
+      yPosition += rowHeight;
+    }
+    
+    // Alternate row colors
+    if (index % 2 === 0) {
+      pdf.setFillColor(248, 249, 250);
+    } else {
+      pdf.setFillColor(255, 255, 255);
+    }
+    
+    pdf.rect(margin, yPosition, contentWidth, rowHeight);
+    
+    // Row data
+    const rowData = [
+      index + 1,
+      record.name || 'N/A',
+      record.department || 'N/A',
+      record.course || 'N/A',
+      record.session || 'N/A',
+      record.status || 'N/A',
+      record.timestamp || 'N/A',
+      record.scans || 'N/A'
+    ];
+    
+    currentX = margin;
+    rowData.forEach((data, colIndex) => {
+      // Truncate text if too long
+      let text = data.toString();
+      const maxWidth = colWidths[colIndex] - 4;
+      while (pdf.getTextWidth(text) > maxWidth && text.length > 0) {
+        text = text.substring(0, text.length - 1);
+      }
+      pdf.text(text, currentX + 2, yPosition + 6);
+      currentX += colWidths[colIndex];
+    });
+    
+    yPosition += rowHeight;
+  });
+  
+  // Footer
+  const finalY = Math.max(yPosition + 20, pdf.internal.pageSize.getHeight() - 20);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'italic');
+  pdf.setTextColor(100, 100, 100);
+  const reportDate = new Date().toLocaleString();
+  pdf.text(`Generated on: ${reportDate}`, margin, finalY);
+  
+  // Generate filename based on filters
+  let filename = 'attendance-report.pdf';
+  if (filterDate) filename = `attendance-${filterDate}.pdf`;
+  if (filterCourse) filename = `attendance-${filterCourse.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+  if (filterDate && filterCourse) filename = `attendance-${filterCourse.replace(/\s+/g, '-').toLowerCase()}-${filterDate}.pdf`;
+  
+  // Save the PDF
+  pdf.save(filename);
+  
+  // Show success message
+  Swal.fire({
+    icon: 'success',
+    title: 'Export Successful',
+    text: `PDF report "${filename}" has been downloaded successfully!`,
+    timer: 3000,
+    showConfirmButton: false,
+    position: 'top-end'
+  });
+}
 
 document.getElementById("sendEmailBtn").addEventListener("click", () => {
   if (filteredRecords.length === 0) {
@@ -1635,6 +1833,9 @@ window.addEventListener("DOMContentLoaded", () => {
   // Initialize session history and load stats immediately
   initSessionHistory();
   loadSessionHistoryStats();
+  
+  // Load coordinator sessions automatically on login
+  loadCoordinatorSessions();
 });
 
 function initSocket() {
