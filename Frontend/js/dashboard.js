@@ -654,27 +654,34 @@ function exportToPDF() {
   pdf.text('Attendance Details:', margin, yPosition);
   yPosition += 10;
   
-  // Table setup
+  // Table setup with clean design
   const tableStartY = yPosition;
-  const colWidths = [15, 60, 40, 30, 30, 40, 50, 35];
-  const headers = ['S.No', 'Student Name', 'Department', 'Course', 'Session', 'Status', 'Timestamp', 'Scans'];
-  const rowHeight = 8;
+  const colWidths = [20, 60, 50, 35, 35, 40]; // Smaller name column, redistributed space
+  const headers = ['S.No', 'Student Name', 'Department', 'Course', 'Status', 'Timestamp', 'Scans'];
+  const rowHeight = 12;
   
-  // Draw table headers
+  // Simple table headers
   pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, yPosition, contentWidth, rowHeight);
   pdf.setTextColor(0, 0, 0);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
+  
+  // Draw header background
+  pdf.rect(margin, yPosition, contentWidth, rowHeight);
   
   let currentX = margin;
   headers.forEach((header, index) => {
-    pdf.text(header, currentX + 2, yPosition + 6);
+    pdf.text(header, currentX + 2, yPosition + 8);
     currentX += colWidths[index];
   });
   
   yPosition += rowHeight;
   
-  // Table data
+  // Table data with clean styling
   pdf.setTextColor(0, 0, 0);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);
+  
   filteredRecords.forEach((record, index) => {
     if (yPosition > pdf.internal.pageSize.getHeight() - 30) {
       pdf.addPage();
@@ -682,34 +689,34 @@ function exportToPDF() {
       
       // Redraw headers on new page
       pdf.setFillColor(240, 240, 240);
-      pdf.rect(margin, yPosition, contentWidth, rowHeight);
       pdf.setTextColor(0, 0, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.rect(margin, yPosition, contentWidth, rowHeight);
       
       currentX = margin;
       headers.forEach((header, headerIndex) => {
-        pdf.text(header, currentX + 2, yPosition + 6);
+        pdf.text(header, currentX + 2, yPosition + 8);
         currentX += colWidths[headerIndex];
       });
       
       yPosition += rowHeight;
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
     }
     
-    // Alternate row colors
-    if (index % 2 === 0) {
-      pdf.setFillColor(248, 249, 250);
-    } else {
-      pdf.setFillColor(255, 255, 255);
-    }
-    
+    // Draw table border for each row
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setLineWidth(0.1);
     pdf.rect(margin, yPosition, contentWidth, rowHeight);
     
-    // Row data
+    // Row data without session column
     const rowData = [
       index + 1,
       record.name || 'N/A',
       record.department || 'N/A',
       record.course || 'N/A',
-      record.session || 'N/A',
       record.status || 'N/A',
       record.timestamp || 'N/A',
       record.scans || 'N/A'
@@ -717,26 +724,37 @@ function exportToPDF() {
     
     currentX = margin;
     rowData.forEach((data, colIndex) => {
-      // Truncate text if too long
+      pdf.setTextColor(0, 0, 0);
       let text = data.toString();
       const maxWidth = colWidths[colIndex] - 4;
       while (pdf.getTextWidth(text) > maxWidth && text.length > 0) {
         text = text.substring(0, text.length - 1);
       }
-      pdf.text(text, currentX + 2, yPosition + 6);
+      pdf.text(text, currentX + 2, yPosition + 8);
       currentX += colWidths[colIndex];
     });
     
     yPosition += rowHeight;
   });
   
-  // Footer
+  // Simple footer
   const finalY = Math.max(yPosition + 20, pdf.internal.pageSize.getHeight() - 20);
-  pdf.setFontSize(10);
+  
+  pdf.setFontSize(9);
   pdf.setFont('helvetica', 'italic');
   pdf.setTextColor(100, 100, 100);
   const reportDate = new Date().toLocaleString();
   pdf.text(`Generated on: ${reportDate}`, margin, finalY);
+  
+  // Add page numbers
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  pdf.setTextColor(150, 150, 150);
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.text(`Page ${i} of ${totalPages}`, margin + contentWidth - 40, pdf.internal.pageSize.getHeight() - 10);
+  }
   
   // Generate filename based on filters
   let filename = 'attendance-report.pdf';
