@@ -1949,11 +1949,13 @@ function initSocket() {
     // Update reports section with new comprehensive data
     updateReportStats();
     
+    // Always refresh session history stats when session completes
+    loadSessionHistoryStats();
+    
     // Refresh session history if on that tab
     const activeTab = document.querySelector('.tab-content.active');
     if (activeTab && activeTab.id === 'session-history') {
       loadSessionHistory();
-      loadSessionHistoryStats();
     }
     
     // Show notification for session completion
@@ -2394,6 +2396,17 @@ async function loadSessionHistoryStats() {
   try {
     const params = new URLSearchParams(historyFilters);
     const token = localStorage.getItem("token");
+    
+    // Show loading state
+    const elements = ['totalSessions', 'totalStudentsHist', 'avgAttendanceRate', 'totalScans'];
+    elements.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = '...';
+        el.style.opacity = '0.6';
+      }
+    });
+    
     const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries/stats?${params}`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -2404,8 +2417,33 @@ async function loadSessionHistoryStats() {
     
     const stats = await response.json();
     renderSessionHistoryStats(stats);
+    
+    // Add animation when data loads
+    elements.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.transition = 'all 0.3s ease';
+        el.style.opacity = '1';
+        el.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+          el.style.transform = 'scale(1)';
+        }, 200);
+      }
+    });
+    
   } catch (error) {
     console.error('Error loading session statistics:', error);
+    
+    // Show error state
+    const elements = ['totalSessions', 'totalStudentsHist', 'avgAttendanceRate', 'totalScans'];
+    elements.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = 'Error';
+        el.style.color = '#dc3545';
+        el.style.opacity = '0.7';
+      }
+    });
   }
 }
 
@@ -2448,16 +2486,49 @@ function renderSessionHistory(summaries) {
 }
 
 function renderSessionHistoryStats(stats) {
-  // Update session history statistics if elements exist
+  // Update session history statistics with enhanced formatting
   const totalSessionsEl = document.getElementById('totalSessions');
   const totalStudentsHistEl = document.getElementById('totalStudentsHist');
   const avgAttendanceRateEl = document.getElementById('avgAttendanceRate');
   const totalScansEl = document.getElementById('totalScans');
   
-  if (totalSessionsEl) totalSessionsEl.textContent = stats.totalSessions || 0;
-  if (totalStudentsHistEl) totalStudentsHistEl.textContent = stats.totalStudents || 0;
-  if (avgAttendanceRateEl) avgAttendanceRateEl.textContent = (stats.averageAttendanceRate || 0).toFixed(1) + '%';
-  if (totalScansEl) totalScansEl.textContent = stats.totalScans || 0;
+  // Format and update total sessions
+  if (totalSessionsEl) {
+    const sessions = stats.totalSessions || 0;
+    totalSessionsEl.textContent = sessions.toLocaleString();
+    totalSessionsEl.style.color = sessions > 0 ? '#007bff' : '#6c757d';
+  }
+  
+  // Format and update total students
+  if (totalStudentsHistEl) {
+    const students = stats.totalStudents || 0;
+    totalStudentsHistEl.textContent = students.toLocaleString();
+    totalStudentsHistEl.style.color = students > 0 ? '#28a745' : '#6c757d';
+  }
+  
+  // Format and update average attendance rate
+  if (avgAttendanceRateEl) {
+    const rate = (stats.averageAttendanceRate || 0).toFixed(1);
+    avgAttendanceRateEl.textContent = rate + '%';
+    const rateValue = parseFloat(rate);
+    avgAttendanceRateEl.style.color = rateValue >= 80 ? '#28a745' : rateValue >= 60 ? '#ffc107' : '#dc3545';
+  }
+  
+  // Format and update total scans
+  if (totalScansEl) {
+    const scans = stats.totalScans || 0;
+    totalScansEl.textContent = scans.toLocaleString();
+    totalScansEl.style.color = scans > 0 ? '#17a2b8' : '#6c757d';
+  }
+  
+  // Update stat icons with pulse animation for active data
+  const statCards = document.querySelectorAll('.stat-card');
+  statCards.forEach((card, index) => {
+    const icon = card.querySelector('.stat-icon i');
+    if (icon && (stats.totalSessions > 0 || stats.totalStudents > 0 || stats.totalScans > 0)) {
+      icon.style.animation = 'pulse 2s infinite';
+    }
+  });
 }
 
 function updateHistoryPagination(currentPage, totalPages) {
