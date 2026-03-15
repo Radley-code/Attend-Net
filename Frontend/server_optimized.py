@@ -111,16 +111,62 @@ class OptimizedHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             print(f"404: {original_path} -> {path}")
 
 def get_local_ip():
-    """Get local IP address"""
+    """Get all local IP addresses for different network interfaces"""
     try:
-        # Try to get local IP by connecting to external DNS
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
+        import socket
+        import netifaces
+        
+        # Try to get all network interfaces
+        ips = []
+        interfaces = netifaces.interfaces()
+        
+        for interface in interfaces:
+            addrs = netifaces.ifaddresses(interface)
+            if netifaces.AF_INET in addrs:
+                for addr in addrs[netifaces.AF_INET]:
+                    ip = addr['addr']
+                    if not ip.startswith('127.') and not ip.startswith('169.254'):
+                        ips.append(ip)
+        
+        # Remove duplicates and return list
+        return list(set(ips)) if ips else ['127.0.0.1']
+        
+    except ImportError:
+        # Fallback method if netifaces not available
+        try:
+            # Try to get local IP by connecting to external DNS
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return [ip]
+        except:
+            return ['127.0.0.1']
     except:
-        return "127.0.0.1"
+        return ['127.0.0.1']
+
+def get_network_info():
+    """Get comprehensive network information"""
+    import socket
+    hostname = socket.gethostname()
+    
+    # Get all local IPs
+    local_ips = get_local_ip()
+    
+    # Try to get external IP (optional)
+    external_ip = None
+    try:
+        import urllib.request
+        external_ip = urllib.request.urlopen('https://api.ipify.org').read().decode('utf8')
+    except:
+        pass
+    
+    return {
+        'hostname': hostname,
+        'local_ips': local_ips,
+        'external_ip': external_ip,
+        'port': PORT
+    }
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     """Threaded HTTP server for better performance"""
@@ -133,13 +179,33 @@ if __name__ == "__main__":
     server_address = ('', PORT)
     httpd = ThreadedHTTPServer(server_address, OptimizedHTTPRequestHandler)
     
-    local_ip = get_local_ip()
+    # Get comprehensive network information
+    network_info = get_network_info()
     
-    print(f" Optimized Server running at:")
+    print(f"🚀 Optimized Server running at:")
     print(f"  Local:   http://localhost:{PORT}")
-    print(f"  Network: http://{local_ip}:{PORT}")
     print(f"  Files:   {os.path.abspath(DIRECTORY)}")
-
+    print(f"  Hostname: {network_info['hostname']}")
+    print(f"\n🌐 Network Access Links:")
+    
+    # Display all available network interfaces
+    for i, ip in enumerate(network_info['local_ips'], 1):
+        print(f"  {i}. http://{ip}:{PORT}")
+    
+    # Display external IP if available
+    if network_info['external_ip']:
+        print(f"\n🌍 External Access (if port forwarded):")
+        print(f"  http://{network_info['external_ip']}:{PORT}")
+    
+    print(f"\n⚡ Performance optimizations enabled:")
+    print(f"  - File caching")
+    print(f"  - Threaded requests")
+    print(f"  - Optimized MIME types")
+    print(f"  - Keep-alive connections")
+    print(f"  - Multi-network interface support")
+    print(f"\n📱 Access from any device on your network using the IP addresses above")
+    print(f"🔧 Works with any router/network configuration")
+    print(f"\nPress Ctrl+C to stop the server")
     
     try:
         # Start server with threaded requests

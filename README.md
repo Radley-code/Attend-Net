@@ -106,6 +106,8 @@ cd Attend-Net
 ```
 
 ### 2. Install Dependencies
+run the python file
+
 ```bash
 # Install root dependencies
 npm install
@@ -150,13 +152,14 @@ The frontend can be served in multiple ways:
 **Option 1: Using Python's built-in server**
 ```bash
 cd Frontend
-python -m http.server 8080
+python install_network_deps.py (to install indepedencies)
+python serve.py (to start the server)
 ```
 
 **Option 2: Using Node.js serve package**
 ```bash
 cd Frontend
-npx serve -s . -l 8080
+npx serve -s . -l 8080 (was removed due to dependency issues)
 ```
 
 **Option 3: Using Live Server extension in VS Code**
