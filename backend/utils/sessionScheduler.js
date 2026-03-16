@@ -58,6 +58,16 @@ function scheduleSession(session) {
                 clearInterval(intervalId);
                 delete timers[session._id];
                 
+                // Emit session ended event to frontend
+                const io = getIO();
+                if (io) {
+                  io.to(`coordinator_${session.coordinator}`).emit("sessionEnded", {
+                    sessionId: session._id,
+                    course: session.course,
+                    endTime: session.endTime
+                  });
+                }
+                
                 // Create session summary when session ends
                 try {
                   await createSessionSummary(session._id);
@@ -161,6 +171,17 @@ async function initSchedules() {
                 console.log(`Session ${s._id} ended, stopping interval scans`);
                 clearInterval(intervalId);
                 delete timers[s._id];
+                
+                // Emit session ended event to frontend
+                const io = getIO();
+                if (io) {
+                  io.to(`coordinator_${s.coordinator}`).emit("sessionEnded", {
+                    sessionId: s._id,
+                    course: s.course,
+                    endTime: s.endTime
+                  });
+                }
+                
                 try {
                   await createSessionSummary(s._id);
                   console.log(`Session summary created for ended session ${s._id}`);

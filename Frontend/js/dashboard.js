@@ -1942,6 +1942,35 @@ function initSocket() {
     });
   });
 
+  // Listen for session ending events
+  socket.on("sessionEnded", (data) => {
+    console.log("sessionEnded event", data);
+    
+    // Stop countdown timer if this is the current session
+    if (currentScanSessionId === data.sessionId) {
+      stopCountdown();
+    }
+    
+    // Clear auto-scan session if it matches
+    if (currentAutoScanSession && currentAutoScanSession._id === data.sessionId) {
+      currentAutoScanSession = null;
+    }
+    
+    // Reload sessions to move the ended session to the ended section
+    loadCoordinatorSessions();
+    
+    // Show notification
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: `Session Ended: ${data.course}`,
+      text: "Session has been moved to ended sessions",
+      showConfirmButton: false,
+      timer: 4000,
+    });
+  });
+
   // Listen for session summary creation events
   socket.on("sessionSummaryCreated", (data) => {
     console.log("sessionSummaryCreated event", data);
