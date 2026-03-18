@@ -1,8 +1,10 @@
-const { createSessionSummary } = require('../controllers/sessionSummaryController');
+const Session = require("../models/session");
 const {
   performScanForSession,
 } = require("../controllers/attendanceControllers");
-const { getIO } = require("./socket");
+const { createSessionSummary } = require("../controllers/sessionSummaryController");
+const emailController = require("../controllers/emailController");
+const { getIO } = require("../utils/socket");
 const mongoose = require("mongoose");
 
 // keep track of timers per session
@@ -72,6 +74,14 @@ function scheduleSession(session) {
                 try {
                   await createSessionSummary(session._id);
                   console.log(`Session summary created for ended session ${session._id}`);
+                  
+                  // Send session end summary emails to all students
+                  try {
+                    await emailController.sendSessionEndSummary(session._id);
+                    console.log(`Session end summary emails sent for session ${session._id}`);
+                  } catch (emailError) {
+                    console.error(`Failed to send session end summary emails for ${session._id}:`, emailError);
+                  }
                 } catch (error) {
                   console.error(`Failed to create session summary for ${session._id}:`, error);
                 }
@@ -101,7 +111,6 @@ function scheduleSession(session) {
 async function performScanAndEmit(session) {
   try {
     // Check if session still exists and is valid
-    const Session = mongoose.model("Session");
     const currentSession = await Session.findById(session._id);
     if (!currentSession) {
       console.log(`Session ${session._id} no longer exists, cancelling schedule`);
@@ -145,7 +154,6 @@ async function initSchedules() {
   try {
     const now = new Date();
     // Only schedule sessions that haven't ended yet
-    const Session = mongoose.model("Session");
     const sessions = await Session.find({ endTime: { $gt: now } });
     console.log(`Found ${sessions.length} upcoming/active sessions to schedule`);
     
@@ -185,6 +193,14 @@ async function initSchedules() {
                 try {
                   await createSessionSummary(s._id);
                   console.log(`Session summary created for ended session ${s._id}`);
+                  
+                  // Send session end summary emails to all students
+                  try {
+                    await emailController.sendSessionEndSummary(s._id);
+                    console.log(`Session end summary emails sent for session ${s._id}`);
+                  } catch (emailError) {
+                    console.error(`Failed to send session end summary emails for ${s._id}:`, emailError);
+                  }
                 } catch (error) {
                   console.error(`Failed to create session summary for ${s._id}:`, error);
                 }

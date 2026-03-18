@@ -24,6 +24,9 @@ const { Server } = require("socket.io");
 const { setIO } = require("./utils/socket");
 const { initSchedules } = require("./utils/sessionScheduler");
 
+// Initialize email scheduler
+const emailScheduler = require("./services/emailScheduler");
+
 mongoose
   .connect(uri)
   .then(() => {
@@ -108,6 +111,10 @@ app.use("/api/admin", adminRoutes);
 const sessionSummaryRoutes = require("./routes/sessionSummaryRoutes");
 app.use("/api/session-summaries", sessionSummaryRoutes);
 
+// Import email routes
+const emailRoutes = require("./routes/emailRoutes");
+app.use("/api/emails", emailRoutes);
+
 // // Import test routes
 // const testRoutes = require("./routes/testRoutes");
 // app.use("/api/test", testRoutes);
@@ -118,12 +125,14 @@ const { cancelAllSchedules } = require("./utils/sessionScheduler");
 process.on('SIGINT', () => {
   console.log('\nReceived SIGINT, shutting down gracefully...');
   cancelAllSchedules();
+  emailScheduler.destroyAll();
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
   console.log('\nReceived SIGTERM, shutting down gracefully...');
   cancelAllSchedules();
+  emailScheduler.destroyAll();
   process.exit(0);
 });
 

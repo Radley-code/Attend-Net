@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 const SessionSummary = require("../models/sessionSummary");
 const Attendance = require("../models/attendance");
 const User = require("../models/user");
+const Session = require("../models/session");
 const { getIO } = require("../utils/socket");
 
 // Create session summary when session ends
 const createSessionSummary = async (sessionId) => {
   try {
-    // Get session details - use mongoose.model to avoid duplicate import
-    const Session = mongoose.model("Session");
+    // Get session details
     const session = await Session.findById(sessionId).populate('coordinator');
     if (!session) {
       console.log(`Session ${sessionId} not found for summary creation`);

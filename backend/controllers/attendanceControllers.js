@@ -1,6 +1,7 @@
 const Attendance = require("../models/attendance");
-const Session = require("../models/Session");
+const Session = require("../models/session");
 const User = require("../models/user");
+const emailController = require("../controllers/emailController");
 const { getIO } = require("../utils/socket");
 
 // perform scan logic given a session document, optionally a list of mac addresses
@@ -147,6 +148,7 @@ async function performScanForSession(session, connectedMacs = []) {
     .filter((r) => r.status === "present")
     .map((r) => ({
       name: r.studentId.name,
+      email: r.studentId.email,
       department: r.studentId.department,
       course: r.sessionId.course,
       session: r.sessionId._id,
@@ -161,6 +163,7 @@ async function performScanForSession(session, connectedMacs = []) {
     .filter((r) => r.status === "absent")
     .map((r) => ({
       name: r.studentId.name,
+      email: r.studentId.email,
       department: r.studentId.department,
       course: r.sessionId.course,
       session: r.sessionId._id,
@@ -182,6 +185,14 @@ async function performScanForSession(session, connectedMacs = []) {
   sess.attendanceRate =
     counts.total > 0 ? (counts.present / counts.total) * 100 : 0;
   await sess.save();
+
+  // Send email notifications to all students about their scan status
+  try {
+    await emailController.sendScanNotifications(sess, present, absent);
+  } catch (emailError) {
+    console.error('Error sending scan notifications:', emailError);
+    // Don't fail the scan if emails fail
+  }
 
   return { present, absent, counts };
 }

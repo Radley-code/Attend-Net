@@ -1,4 +1,5 @@
-const Session = require("../models/Session");
+const Session = require("../models/session");
+const emailController = require("../controllers/emailController");
 
 // helper to compute status for a session based on local time
 function computeStatus(session) {
@@ -30,11 +31,27 @@ const createSession = async (req, res) => {
         typeof interval === "number" ? interval : parseInt(interval, 10) || 0,
     });
     await newSession.save();
+    
+    // Send email notifications asynchronously (non-blocking)
+    setImmediate(async () => {
+      try {
+        const emailResult = await emailController.sendSessionCreationNotifications(newSession._id);
+        console.log('Session creation email notifications sent:', emailResult);
+      } catch (emailError) {
+        console.error('Error sending session creation notifications:', emailError);
+        // Don't fail the session creation if emails fail
+      }
+    });
+    
     // schedule scans for this session
     scheduleSession(newSession);
     res
       .status(201)
-      .json({ message: "Session created successfully", session: newSession });
+      .json({ 
+        message: "Session created successfully", 
+        session: newSession,
+        emailNotifications: 'Sending notifications to students in selected departments...'
+      });
   } catch (error) {
     console.error("Error creating session:", error);
     res.status(500).json({ message: "Server error during session creation" });

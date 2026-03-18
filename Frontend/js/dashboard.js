@@ -544,12 +544,234 @@ document
   .addEventListener("change", applyFilters);
 
 // Action Buttons
-document.getElementById("previewEmailBtn").addEventListener("click", () => {
-  if (filteredRecords.length === 0) {
-    alert("No records to preview");
+document.getElementById("previewEmailBtn").addEventListener("click", async () => {
+  const filterDate = document.getElementById("filterDate").value;
+  const filterCourse = document.getElementById("filterCourse").value;
+  const filterSession = document.getElementById("filterSession").value;
+  
+  if (!filterDate && !filterCourse && !filterSession) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Filters Selected',
+      text: 'Please select at least one filter (date, course, or session) to preview email.',
+      confirmButtonColor: '#007bff'
+    });
     return;
   }
-  alert("Email preview feature coming soon!");
+
+  // Show loading state
+  Swal.fire({
+    title: 'Generating Email Preview...',
+    text: 'Please wait while we generate the email preview.',
+    didOpen: () => {
+      Swal.showLoading();
+    },
+    allowOutsideClick: false,
+    allowEscapeKey: false
+  });
+
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BACKEND_CONFIG.URL}/api/emails/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        emailType: 'weekly_summary',
+        recipientType: 'coordinator',
+        data: {
+          coordinatorName: 'Current Coordinator',
+          weekData: {
+            totalSessions: filteredRecords.length || 0,
+            totalStudents: new Set(filteredRecords.map(r => r.name)).size || 0,
+            avgAttendance: filteredRecords.length > 0 ? 
+              (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0,
+            departments: [
+              {
+                name: filterCourse || 'All Courses',
+                sessions: filteredRecords.length || 0,
+                students: new Set(filteredRecords.map(r => r.name)).size || 0,
+                avgAttendance: filteredRecords.length > 0 ? 
+                  (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0
+              }
+            ]
+          }
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate email preview');
+    }
+
+    const result = await response.json();
+    
+    Swal.close();
+    
+    // Show preview in modal
+    Swal.fire({
+      title: 'Email Preview',
+      html: `
+        <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+          <h3>Subject: Weekly Attendance Report</h3>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <pre style="white-space: pre-wrap; font-family: monospace; font-size: 12px; margin: 0;">${result.preview}</pre>
+          </div>
+        </div>
+      `,
+      width: '600px',
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#007bff'
+    });
+
+  } catch (error) {
+    console.error('Email preview failed:', error);
+    Swal.close();
+    Swal.fire({
+      icon: 'error',
+      title: 'Preview Failed',
+      text: 'Failed to generate email preview. Please try again.',
+      confirmButtonColor: '#dc3545'
+    });
+  }
+});
+
+// Send Email Button
+document.getElementById("sendEmailBtn").addEventListener("click", async () => {
+  const filterDate = document.getElementById("filterDate").value;
+  const filterCourse = document.getElementById("filterCourse").value;
+  const filterSession = document.getElementById("filterSession").value;
+  
+  if (!filterDate && !filterCourse && !filterSession) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Filters Selected',
+      text: 'Please select at least one filter (date, course, or session) to send email.',
+      confirmButtonColor: '#007bff'
+    });
+    return;
+  }
+
+  if (filteredRecords.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Data',
+      text: 'No attendance records to send. Please select filters to generate data.',
+      confirmButtonColor: '#007bff'
+    });
+    return;
+  }
+
+  // Confirm before sending
+  const result = await Swal.fire({
+    title: 'Send Email Report?',
+    html: `
+      <div style="text-align: left;">
+        <p>This will send a weekly attendance report with the following details:</p>
+        <ul>
+          <li><strong>Total Students:</strong> ${new Set(filteredRecords.map(r => r.name)).size}</li>
+          <li><strong>Total Records:</strong> ${filteredRecords.length}</li>
+          <li><strong>Average Attendance:</strong> ${filteredRecords.length > 0 ? 
+            (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0}%</li>
+          <li><strong>Course:</strong> ${filterCourse || 'All Courses'}</li>
+          <li><strong>Date:</strong> ${filterDate || 'All Dates'}</li>
+        </ul>
+        <p><em>The email will be sent to your registered email address.</em></p>
+      </div>
+    `,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Send Email',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#007bff',
+    cancelButtonColor: '#6c757d'
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  // Show loading state
+  Swal.fire({
+    title: 'Sending Email...',
+    text: 'Please wait while we send the attendance report.',
+    didOpen: () => {
+      Swal.showLoading();
+    },
+    allowOutsideClick: false,
+    allowEscapeKey: false
+  });
+
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BACKEND_CONFIG.URL}/api/emails/test`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        email: 'coordinator@example.com', // This would be the coordinator's actual email
+        emailType: 'weekly_summary',
+        recipientType: 'coordinator',
+        data: {
+          coordinatorName: 'Current Coordinator',
+          weekData: {
+            totalSessions: filteredRecords.length || 0,
+            totalStudents: new Set(filteredRecords.map(r => r.name)).size || 0,
+            avgAttendance: filteredRecords.length > 0 ? 
+              (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0,
+            departments: [
+              {
+                name: filterCourse || 'All Courses',
+                sessions: filteredRecords.length || 0,
+                students: new Set(filteredRecords.map(r => r.name)).size || 0,
+                avgAttendance: filteredRecords.length > 0 ? 
+                  (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0
+              }
+            ]
+          }
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send email');
+    }
+
+    const emailResult = await response.json();
+    
+    Swal.close();
+    
+    if (emailResult.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Email Sent Successfully!',
+        html: `
+          <div style="text-align: left;">
+            <p>The attendance report has been sent to your email.</p>
+            <p><strong>Message ID:</strong> ${emailResult.messageId}</p>
+            <p><em>Please check your inbox (and spam folder) for the email.</em></p>
+          </div>
+        `,
+        confirmButtonColor: '#007bff'
+      });
+    } else {
+      throw new Error(emailResult.error || 'Email sending failed');
+    }
+
+  } catch (error) {
+    console.error('Send email failed:', error);
+    Swal.close();
+    Swal.fire({
+      icon: 'error',
+      title: 'Email Send Failed',
+      text: 'Failed to send email. Please check your email configuration and try again.',
+      confirmButtonColor: '#dc3545'
+    });
+  }
 });
 
 document.getElementById("exportPdfBtn").addEventListener("click", () => {
