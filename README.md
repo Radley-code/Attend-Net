@@ -99,15 +99,13 @@ Attend-Net/
 - MongoDB (local or cloud instance)
 - Git
 
-### 1. Clone the Repository
+### 1. Clone Repository
 ```bash
 git clone <repository-url>
 cd Attend-Net
 ```
 
 ### 2. Install Dependencies
-run the python file
-
 ```bash
 # Install root dependencies
 npm install
@@ -115,14 +113,10 @@ npm install
 # Install backend dependencies
 cd backend
 npm install
-
-# Return to root directory
-cd ..
 ```
 
 ### 3. Environment Configuration
 Create a `.env` file in the `backend/` directory:
-
 ```env
 # MongoDB Configuration
 MONGODB_URI=mongodb://localhost:27017/attendnet
@@ -137,35 +131,33 @@ JWT_SECRET=your-super-secret-jwt-key
 NETWORK_IP=192.168.1.101
 ```
 
-### 4. Start the Application
+### 4. Start Application
 
 #### Backend Server
 ```bash
 cd backend
 node server.js
 ```
-The backend will start on `http://localhost:3000`
 
 #### Frontend
 The frontend can be served in multiple ways:
 
-**Option 1: Using Python's built-in server**
+**Option 1: Minimal Server (Recommended)**
 ```bash
 cd Frontend
-python install_network_deps.py (to install indepedencies)
-python serve.py (to start the server)
+node minimal_server.js
 ```
 
-**Option 2: Using Node.js serve package**
+**Option 2: Python Server**
 ```bash
 cd Frontend
-npx serve -s . -l 8080 (was removed due to dependency issues)
+python server.py
 ```
 
-**Option 3: Using Live Server extension in VS Code**
+**Option 3: VS Code Live Server**
 - Right-click on `index.html` and select "Open with Live Server"
 
-The frontend will be available at `http://localhost:8080`
+The backend will start on `http://localhost:3000` and frontend on `http://localhost:8080`.
 
 ## 🔧 Configuration
 
@@ -177,9 +169,17 @@ The application is configured to work on both localhost and network environments
 
 ### MAC Address Detection
 The system uses network-based MAC address detection. Ensure:
-- Students and the server are on the same network
+- Students and server are on the same network
 - Network administrator permissions for MAC address scanning
 - Proper firewall configuration for network access
+- Router accessible at `192.168.1.1` with web interface enabled
+
+**Enhanced Detection Features:**
+- Multiple router API endpoint support
+- Automatic IP address detection from client requests
+- Fallback mechanisms for different router types
+- Comprehensive error handling and logging
+- Support for Vue.js SPA-based router interfaces
 
 ## 📖 Usage Guide
 
@@ -226,7 +226,54 @@ The system uses network-based MAC address detection. Ensure:
    - Export attendance data
    - View attendance statistics and trends
 
-## 🔐 Authentication & Security
+## � Troubleshooting
+
+### Common Issues
+
+#### 1. MAC Address Detection Fails
+**Symptoms**: "Unable to detect MAC address" error
+
+**Solutions**:
+- **Network Connectivity**: Ensure device is connected to same network as server
+- **Router Access**: Verify router at `192.168.1.1` is accessible from browser
+- **Permissions**: Check if router admin credentials are correct (admin/admin)
+- **Firewall**: Ensure network allows HTTP requests to router
+- **Router Type**: Some routers don't support web-based MAC detection
+
+#### 2. Frontend-Backend Connection Issues
+**Symptoms**: "Network error" or "Failed to fetch"
+
+**Solutions**:
+- **CORS Issues**: Backend server must include CORS headers
+- **Port Conflicts**: Ensure backend (3000) and frontend (8080) don't conflict
+- **URL Configuration**: Update `BACKEND_URL` in frontend to match server IP
+- **Firewall**: Allow connections between frontend and backend ports
+
+#### 3. Testing Tools
+
+**Minimal Server Test**:
+```bash
+cd Frontend
+node minimal_server.js
+# Visit http://localhost:8080
+```
+
+**API Direct Test**:
+```bash
+curl http://localhost:3000/api/users/detect-mac
+```
+
+### Debug Mode
+Enable detailed logging by setting:
+```env
+DEBUG=attendnet:*
+```
+
+This will show:
+- Client IP addresses
+- Router connection attempts
+- API responses
+- MAC detection results
 
 ### Coordinator Authentication
 - JWT-based authentication system
@@ -250,8 +297,6 @@ The system uses network-based MAC address detection. Ensure:
 ### Session Management
 - `POST /api/sessions/create` - Create new session (protected)
 - `GET /api/sessions/mine` - Get coordinator's sessions (protected)
-
-### Attendance
 - `POST /api/attendance/mark` - Mark attendance (protected)
 - `GET /api/attendance/session/:id` - Get session attendance (protected)
 
@@ -262,7 +307,6 @@ The system uses network-based MAC address detection. Ensure:
 ### Session Summary
 - `POST /api/session-summary/create` - Create session summary (protected)
 - `GET /api/session-summary/session/:id` - Get session summary (protected)
-
 
 ## 🔧 Troubleshooting
 
