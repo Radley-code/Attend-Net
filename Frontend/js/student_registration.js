@@ -16,6 +16,14 @@ window.addEventListener("load", () => {
   setTimeout(() => {
     showDeviceAlert();
   }, 300);
+  
+  // Debug: Check if phone field exists
+  const phoneField = document.getElementById("phone");
+  console.log("Phone field found:", !!phoneField);
+  if (phoneField) {
+    console.log("Phone field value:", phoneField.value);
+    console.log("Phone field visible:", phoneField.offsetParent !== null);
+  }
 });
 
 // Dismiss device alert (dismiss button)
@@ -134,12 +142,21 @@ registrationForm.addEventListener("submit", async (e) => {
   }
 
   // Prepare payload
+  const phoneElement = document.getElementById("phone");
+  const phoneValue = phoneElement ? phoneElement.value.trim() : '';
+  
+  console.log('Phone element:', phoneElement);
+  console.log('Phone value:', phoneValue);
+  
   const payload = {
     name: document.getElementById("fullName").value.trim(),
     email: document.getElementById("email").value.trim(),
     department: document.getElementById("department").value.trim(),
     macAddress: macAddress,
+    phone: phoneValue,
   };
+
+  console.log('Registration payload:', payload);
 
   // Validate all fields
   if (
@@ -148,8 +165,17 @@ registrationForm.addEventListener("submit", async (e) => {
     !payload.department ||
     !payload.macAddress
   ) {
-    showMessage("Please fill in all fields.", "error");
+    showMessage("Please fill in all required fields.", "error");
     return;
+  }
+
+  // Validate phone number (optional but if provided, must be valid)
+  if (payload.phone) {
+    const phoneRegex = /^[6-9]\d{8}$/; // Cameroon format: 9 digits starting with 6-9
+    if (!phoneRegex.test(payload.phone)) {
+      showMessage("Invalid phone number. Use Cameroon format (e.g., 612345678)", "error");
+      return;
+    }
   }
 
   // Disable button and show loading state
@@ -169,16 +195,26 @@ registrationForm.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if (res.ok) {
-      showMessage(
-        `✓ Registration successful! Welcome, ${payload.name}!`,
-        "success",
-      );
+      // Check if phone number was saved
+      const phoneSaved = data.user?.phoneSaved || false;
+      const savedPhone = data.user?.phone || '';
+      
+      let successMessage = `✓ Registration successful! Welcome, ${payload.name}!`;
+      
+      if (phoneSaved && savedPhone) {
+        successMessage += `\n📱 Phone number saved for SMS notifications.`;
+      }
+      
+      showMessage(successMessage, "success");
 
       // Store registration info
       localStorage.setItem("studentName", payload.name);
       localStorage.setItem("studentEmail", payload.email);
       localStorage.setItem("studentDepartment", payload.department);
       localStorage.setItem("studentMac", payload.macAddress);
+      if (phoneSaved && savedPhone) {
+        localStorage.setItem("studentPhone", savedPhone);
+      }
 
       // Reset form
       registrationForm.reset();

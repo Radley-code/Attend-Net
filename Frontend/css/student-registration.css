@@ -412,6 +412,32 @@ body.dark-theme .device-alert-footer {
   animation-delay: 0.65s;
 }
 
+.form-group:nth-child(5) {
+  animation-delay: 0.7s;
+}
+
+/* Phone field specific styling */
+#phone {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #e0e0e0 !important;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+#phone:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  transform: translateY(-1px);
+  background: white !important;
+}
+
+/* Ensure phone field form group is visible */
+.form-group:has(#phone) {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 .form-label {
   display: block;
   margin-bottom: 0.5rem;
@@ -464,6 +490,19 @@ body.dark-theme .device-alert-footer {
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   outline: none;
+}
+
+/* Form text (help text) styling */
+.form-text {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+  display: block;
+  animation: fadeIn 0.5s ease-out 0.8s both;
+}
+
+.text-muted {
+  color: #6c757d !important;
 }
 
 .form-control::placeholder {

@@ -6,6 +6,7 @@ const EmailLog = require('../models/emailLog');
 const EmailPreference = require('../models/emailPreference');
 const emailService = require('../services/emailService');
 const emailQueue = require('../services/emailQueue');
+const smsController = require('../controllers/smsController');
 const { getIO } = require('../utils/socket');
 
 class EmailController {
@@ -121,6 +122,16 @@ class EmailController {
 
       // Add all summary emails to queue for efficient processing
       emailQueue.sendMultiple(summaryEmails);
+
+      // Send SMS notifications asynchronously
+      setImmediate(async () => {
+        try {
+          const smsResult = await smsController.sendSessionEndSMS(sessionId);
+          console.log('Session end SMS sent:', smsResult);
+        } catch (smsError) {
+          console.error('Error sending session end SMS:', smsError);
+        }
+      });
 
       return {
         success: true,
@@ -239,6 +250,16 @@ class EmailController {
 
       // Add all emails to queue for efficient processing
       emailQueue.sendMultiple([...studentEmails, coordinatorEmail]);
+
+      // Send SMS notifications asynchronously
+      setImmediate(async () => {
+        try {
+          const smsResult = await smsController.sendSessionCreationSMS(sessionId);
+          console.log('Session creation SMS sent:', smsResult);
+        } catch (smsError) {
+          console.error('Error sending session creation SMS:', smsError);
+        }
+      });
 
       return {
         success: true,

@@ -115,6 +115,10 @@ app.use("/api/session-summaries", sessionSummaryRoutes);
 const emailRoutes = require("./routes/emailRoutes");
 app.use("/api/emails", emailRoutes);
 
+// Import SMS routes
+const smsRoutes = require("./routes/smsRoutes");
+app.use("/api/sms", smsRoutes);
+
 // // Import test routes
 // const testRoutes = require("./routes/testRoutes");
 // app.use("/api/test", testRoutes);

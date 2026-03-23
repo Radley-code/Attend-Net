@@ -12,7 +12,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="css/student-registration.css" />
+    <link rel="stylesheet" href="css/student-registration.css?v=1.1" />
     <link rel="stylesheet" href="css/student-dark-theme.css" />
   </head>
   <body>
@@ -150,6 +150,25 @@
               placeholder="john@finistech.com"
               required
             />
+          </div>
+
+          <!-- Phone Number (Optional) -->
+          <div class="form-group">
+            <label for="phone" class="form-label">
+              <i class="fas fa-phone"></i> Phone Number (Optional)
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              class="form-control"
+              placeholder="612345678"
+              pattern="[6-9][0-9]{8}"
+              title="Enter Cameroon phone number (9 digits starting with 6-9)"
+            />
+            <small class="form-text text-muted">
+              For SMS notifications (Cameroon numbers only, e.g., 612345678)
+            </small>
           </div>
 
           <!-- MAC Address -->

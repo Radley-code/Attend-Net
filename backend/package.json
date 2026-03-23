@@ -16,11 +16,12 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^2.5.1",
     "macaddress": "^0.5.4",
     "mongoose": "^8.20.0",
-    "socket.io": "^4.8.3",
-    "nodemailer": "^6.9.7",
     "node-cron": "^3.0.3",
-    "jspdf": "^2.5.1"
+    "nodemailer": "^6.9.7",
+    "socket.io": "^4.8.3",
+    "twilio": "^5.13.0"
   }
 }

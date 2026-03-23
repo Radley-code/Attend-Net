@@ -4,7 +4,11 @@ const registerStudent = async (req, res) => {
   try {
     console.log("registerStudent body:", req.body);
     const body = req.body || {};
-    const { name, email, department } = body;
+    const { name, email, department, phone } = body;
+
+    console.log("Extracted phone:", phone);
+    console.log("Phone type:", typeof phone);
+    console.log("Phone length:", phone ? phone.length : 'undefined');
 
     const studentIP =
       req.headers["x-forwarded-for"] || req.socket.remoteAddress;
@@ -27,11 +31,34 @@ const registerStudent = async (req, res) => {
         .json({ message: "User with this email already exists" });
     }
 
-    const newUser = new User({ name, email, department, macAddress });
+    // Create user object with phone number (optional)
+    const userData = { name, email, department, macAddress };
+    if (phone && phone.trim()) {
+      userData.phone = phone.trim();
+      console.log("Adding phone to userData:", userData.phone);
+    } else {
+      console.log("No phone number provided or phone is empty");
+    }
+
+    const newUser = new User(userData);
     await newUser.save();
-    return res
-      .status(201)
-      .json({ message: "Student registered successfully", user: newUser });
+    
+    console.log("Saved user phone:", newUser.phone);
+    
+    // Prepare response data
+    const responseData = {
+      message: "Student registered successfully", 
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        department: newUser.department,
+        phone: newUser.phone, // Include phone in response
+        phoneSaved: !!newUser.phone // Boolean indicating if phone was saved
+      }
+    };
+    
+    return res.status(201).json(responseData);
   } catch (error) {
     console.error(
       "Error registering student:",

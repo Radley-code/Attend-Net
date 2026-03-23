@@ -35,7 +35,8 @@ router.post("/login", async (req, res) => {
 // Create coordinator endpoint
 router.post("/create", verifyAdmin, async (req, res) => {
   try {
-    const { name, email, password, department } = req.body;
+    const { name, email, password, department, phone } = req.body;
+
     if (!name || !email || !password || !department) {
       return res
         .status(400)
@@ -55,6 +56,7 @@ router.post("/create", verifyAdmin, async (req, res) => {
       email,
       password: hashed,
       department,
+      phone: phone || undefined, // Optional phone number
     });
 
     await coordinator.save();
@@ -65,6 +67,7 @@ router.post("/create", verifyAdmin, async (req, res) => {
         name,
         email,
         department,
+        phone: coordinator.phone,
       },
     });
   } catch (err) {
