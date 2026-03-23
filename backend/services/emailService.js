@@ -97,6 +97,29 @@ AttendNet System
     `.trim();
   }
 
+  // Session end summary template
+  getSessionEndSummaryTemplate(studentName, courseName, coordinatorName, date, startTime, endTime, attendanceRate, finalStatus) {
+    return `
+Dear ${studentName},
+
+SESSION ENDED - ${courseName}
+
+Course: ${courseName}
+Coordinator: ${coordinatorName}
+Date: ${date}
+Session Time: ${startTime} - ${endTime}
+Final Status: ${finalStatus.toUpperCase()}
+Your Attendance Rate: ${attendanceRate.toFixed(1)}%
+
+This session has officially ended. Your attendance has been recorded and this is your final summary.
+
+If you believe this is an error, please contact your coordinator immediately.
+
+Best regards,
+AttendNet System
+    `.trim();
+  }
+
   getStudentWeeklyTemplate(studentName, attendanceData) {
     const { totalSessions, presentSessions, attendanceRate, courses } = attendanceData;
     

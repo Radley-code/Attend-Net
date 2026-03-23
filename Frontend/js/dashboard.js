@@ -998,13 +998,7 @@ function exportToPDF() {
   });
 }
 
-document.getElementById("sendEmailBtn").addEventListener("click", () => {
-  if (filteredRecords.length === 0) {
-    alert("No attendance records to send");
-    return;
-  }
-  alert("Email sending feature coming soon!");
-});
+
 
 // Settings Tab & Logout
 document.getElementById("settingsLink").addEventListener("click", (e) => {

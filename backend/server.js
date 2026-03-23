@@ -105,7 +105,7 @@ app.use("/api/coordinator", loginRoutes);
 
 // Import admin routes
 const adminRoutes = require("./routes/adminRoutes");
-app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminRoutes); //no UI yet
 
 // Import session summary routes
 const sessionSummaryRoutes = require("./routes/sessionSummaryRoutes");

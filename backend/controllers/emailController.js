@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const Coordinator = require('../models/coordinator');
 const Session = require('../models/session');
+const Attendance = require('../models/attendance');
 const EmailLog = require('../models/emailLog');
 const EmailPreference = require('../models/emailPreference');
 const emailService = require('../services/emailService');
@@ -95,19 +96,15 @@ class EmailController {
         return {
           to: studentEmail,
           subject: `Session Ended - ${session.course} - Summary`,
-          text: emailService.getStudentWeeklyTemplate(
+          text: emailService.getSessionEndSummaryTemplate(
             studentName,
-            {
-              totalSessions: 1,
-              presentSessions: record.status === 'present' ? 1 : 0,
-              attendanceRate: studentAttendanceRate,
-              courses: [{
-                name: session.course,
-                present: record.status === 'present' ? 1 : 0,
-                total: 1,
-                rate: studentAttendanceRate
-              }]
-            }
+            session.course,
+            session.coordinator?.name || 'Coordinator',
+            session.date.toLocaleDateString(),
+            session.startTime,
+            session.endTime,
+            studentAttendanceRate,
+            status
           ),
           recipientType: 'student',
           emailType: 'session_summary',
@@ -209,7 +206,7 @@ class EmailController {
           coordinator.name,
           'Session Created',
           session.date.toLocaleDateString(),
-          session.startTime
+          `${session.startTime} - ${session.endTime}`
         ),
         recipientType: 'student',
         emailType: 'session_created',
@@ -229,7 +226,7 @@ class EmailController {
           session.course,
           session.departments.join(', '),
           session.date.toLocaleDateString(),
-          session.startTime,
+          `${session.startTime} - ${session.endTime}`,
           students
         ),
         recipientType: 'coordinator',

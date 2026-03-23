@@ -12,7 +12,7 @@ const emailLogSchema = new mongoose.Schema({
     },
     emailType: {
         type: String,
-        enum: ['attendance_notification', 'attendance_scan', 'weekly_summary', 'low_attendance_alert', 'session_created', 'session_summary'],
+        enum: ['attendance_notification', 'attendance_scan', 'weekly_summary', 'low_attendance_alert', 'session_created', 'session_summary', 'test'],
         required: true
     },
     subject: {
