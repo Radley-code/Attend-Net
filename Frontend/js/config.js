@@ -1,4 +1,4 @@
-// Global configuration for AttendNet Frontend
+// Global configuration for AttendNet Frontend so it be accessible from any device on the network
 // This file should be loaded before any other JavaScript files
 
 // Detect if running on localhost or network
