@@ -2,9 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(express.json());
+
+// Serve frontend static files from Frontend directory
+app.use(express.static(path.join(__dirname, "../Frontend")));
 
 app.use(
   cors({

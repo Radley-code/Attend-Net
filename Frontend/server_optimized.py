@@ -63,8 +63,10 @@ class OptimizedHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if self.path in icon_redirects:
             self.path = icon_redirects[self.path]
         
-        # Get clean path
+        # Get clean path and remove query parameters
         path = self.path.lstrip('/')
+        if '?' in path:
+            path = path.split('?')[0]  # Remove query parameters like ?v=1.1
         
         # Default to index.html
         if path == '' or path == '/':
@@ -103,12 +105,13 @@ class OptimizedHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 content = f.read()
                 self.file_cache[cache_key] = (content, os.path.getmtime(full_path))
                 self.wfile.write(content)
+                print(f"200: {original_path} -> {path} ({content_type})")
         else:
             self.send_response(404)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(b'404 - File Not Found')
-            print(f"404: {original_path} -> {path}")
+            print(f"404: {original_path} -> {path} (looking for: {full_path})")
 
 def get_local_ip():
     """Get all local IP addresses for different network interfaces"""
