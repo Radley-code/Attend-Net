@@ -130,15 +130,15 @@ app.use("/api/sms", smsRoutes);
 // Graceful shutdown handling
 const { cancelAllSchedules } = require("./utils/sessionScheduler");
 
-process.on('SIGINT', () => {
-  console.log('\nReceived SIGINT, shutting down gracefully...');
+process.on("SIGINT", () => {
+  console.log("\nReceived SIGINT, shutting down gracefully...");
   cancelAllSchedules();
   emailScheduler.destroyAll();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
-  console.log('\nReceived SIGTERM, shutting down gracefully...');
+process.on("SIGTERM", () => {
+  console.log("\nReceived SIGTERM, shutting down gracefully...");
   cancelAllSchedules();
   emailScheduler.destroyAll();
   process.exit(0);

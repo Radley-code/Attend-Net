@@ -27,53 +27,79 @@ async function performScanForSession(session, connectedMacs = []) {
       const found = new Set();
       const macRegex = /([0-9a-f]{2}[-:]){5}[0-9a-f]{2}/gi;
 
-      // Method 1: Traditional ARP scan
+      // Clear ARP cache to ensure fresh data
       try {
-        const arpOutput = execSync("arp -a", { encoding: "utf-8" });
-        let m;
-        while ((m = macRegex.exec(arpOutput))) {
-          found.add(m[0].replace(/-/g, ":").toUpperCase());
+        execSync("netsh interface ip delete arpcache", { timeout: 5000 });
+        console.log("ARP cache cleared");
+      } catch (clearErr) {
+        console.log("Failed to clear ARP cache:", clearErr.message);
+        // Try alternative method
+        try {
+          execSync("arp -d *", { timeout: 5000 });
+          console.log("ARP cache cleared using arp -d");
+        } catch (altClearErr) {
+          console.log("Alternative ARP clear failed:", altClearErr.message);
         }
-      } catch (e) {
-        console.log("ARP method 1 failed", e.message);
       }
 
-      // Method 2: Windows Get-NetNeighbor (PowerShell) - most comprehensive
+      // Method 1: Windows Get-NetNeighbor with ping verification (most strict)
       try {
         const psCmd =
-          'powershell -Command "Get-NetNeighbor -AddressFamily IPv4 -State Reachable | Select-Object -ExpandProperty LinkLayerAddress"';
+          'powershell -Command "Get-NetNeighbor -AddressFamily IPv4 -State Reachable | Select-Object IPAddress, LinkLayerAddress | ConvertTo-Json"';
         const psOutput = execSync(psCmd, { encoding: "utf-8" });
-        const lines = psOutput.split("\n");
-        lines.forEach((line) => {
-          const mac = line.trim().replace(/-/g, ":").toUpperCase();
-          if (macRegex.test(mac)) {
-            found.add(mac);
+
+        let neighbors = [];
+        try {
+          // Parse JSON output
+          neighbors = JSON.parse(psOutput.trim());
+          if (!Array.isArray(neighbors)) {
+            neighbors = [neighbors];
           }
-        });
+        } catch (parseErr) {
+          console.log(
+            "Failed to parse PowerShell JSON output:",
+            parseErr.message,
+          );
+        }
+
+        // For each neighbor, ping the IP to confirm reachability
+        for (const neighbor of neighbors) {
+          if (neighbor.IPAddress && neighbor.LinkLayerAddress) {
+            const ip = neighbor.IPAddress;
+            const mac = neighbor.LinkLayerAddress.replace(
+              /-/g,
+              ":",
+            ).toUpperCase();
+
+            // Ping the IP to confirm it's reachable
+            try {
+              const pingCmd = `ping -n 1 -w 1000 ${ip}`;
+              execSync(pingCmd, { timeout: 2000 });
+              // If ping succeeds, add the MAC
+              found.add(mac);
+              console.log(`Confirmed reachable: ${mac} at ${ip}`);
+            } catch (pingErr) {
+              console.log(
+                `Ping failed for ${ip} (${mac}), device not reachable`,
+              );
+            }
+          }
+        }
       } catch (e) {
         console.log("PowerShell Get-NetNeighbor method failed", e.message);
       }
 
-      // Method 3: netstat (may show MAC in some configurations)
-      try {
-        const netstatOutput = execSync("netstat -an", { encoding: "utf-8" });
-        let m;
-        while ((m = macRegex.exec(netstatOutput))) {
-          found.add(m[0].replace(/-/g, ":").toUpperCase());
+      // Fallback Method 2: Traditional ARP scan (less reliable)
+      if (found.size === 0) {
+        try {
+          const arpOutput = execSync("arp -a", { encoding: "utf-8" });
+          let m;
+          while ((m = macRegex.exec(arpOutput))) {
+            found.add(m[0].replace(/-/g, ":").toUpperCase());
+          }
+        } catch (e) {
+          console.log("ARP method failed", e.message);
         }
-      } catch (e) {
-        console.log("Netstat method failed", e.message);
-      }
-
-      // Method 4: ipconfig (parse MAC addresses from network interfaces)
-      try {
-        const ipconfigOutput = execSync("ipconfig /all", { encoding: "utf-8" });
-        let m;
-        while ((m = macRegex.exec(ipconfigOutput))) {
-          found.add(m[0].replace(/-/g, ":").toUpperCase());
-        }
-      } catch (e) {
-        console.log("ipconfig method failed", e.message);
       }
 
       connectedMacs = Array.from(found);
@@ -190,7 +216,7 @@ async function performScanForSession(session, connectedMacs = []) {
   try {
     await emailController.sendScanNotifications(sess, present, absent);
   } catch (emailError) {
-    console.error('Error sending scan notifications:', emailError);
+    console.error("Error sending scan notifications:", emailError);
     // Don't fail the scan if emails fail
   }
 
@@ -226,11 +252,13 @@ const scanAttendance = async (req, res) => {
 
     // Check cooldown
     const lastScanTime = scanCooldowns.get(sessionId);
-    if (lastScanTime && (now - lastScanTime) < COOLDOWN_PERIOD) {
-      const remainingTime = Math.ceil((COOLDOWN_PERIOD - (now - lastScanTime)) / 1000);
-      return res.status(429).json({ 
+    if (lastScanTime && now - lastScanTime < COOLDOWN_PERIOD) {
+      const remainingTime = Math.ceil(
+        (COOLDOWN_PERIOD - (now - lastScanTime)) / 1000,
+      );
+      return res.status(429).json({
         message: `Please wait ${remainingTime} seconds before scanning again`,
-        cooldown: remainingTime
+        cooldown: remainingTime,
       });
     }
 

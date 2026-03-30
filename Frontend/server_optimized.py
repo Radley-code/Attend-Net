@@ -185,11 +185,11 @@ if __name__ == "__main__":
     # Get comprehensive network information
     network_info = get_network_info()
     
-    print(f"🚀 Optimized Server running at:")
+    print(f" Optimized Server running at:")
     print(f"  Local:   http://localhost:{PORT}")
     print(f"  Files:   {os.path.abspath(DIRECTORY)}")
     print(f"  Hostname: {network_info['hostname']}")
-    print(f"\n🌐 Network Access Links:")
+    print(f"\n Network Access Links:")
     
     # Display all available network interfaces
     for i, ip in enumerate(network_info['local_ips'], 1):
@@ -197,16 +197,16 @@ if __name__ == "__main__":
     
     # Display external IP if available
     if network_info['external_ip']:
-        print(f"\n🌍 External Access (if port forwarded):")
+        print(f"\n External Access (if port forwarded):")
         print(f"  http://{network_info['external_ip']}:{PORT}")
     
-    print(f"\n⚡ Performance optimizations enabled:")
+    print(f"\n Performance optimizations enabled:")
     print(f"  - File caching")
     print(f"  - Threaded requests")
     print(f"  - Optimized MIME types")
     print(f"  - Keep-alive connections")
     print(f"  - Multi-network interface support")
-    print(f"\n📱 Access from any device on your network using the IP addresses above")
+    print(f"\n Access from any device on your network using the IP addresses above")
     print(f"🔧 Works with any router/network configuration")
     print(f"\nPress Ctrl+C to stop the server")
     

@@ -168,14 +168,17 @@ if (profileMenuBtn && profileDropdown) {
 
   // Close dropdown when clicking outside
   document.addEventListener("click", (e) => {
-    if (!profileMenuBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+    if (
+      !profileMenuBtn.contains(e.target) &&
+      !profileDropdown.contains(e.target)
+    ) {
       profileDropdown.classList.remove("active");
     }
   });
 
   // Close dropdown when clicking on dropdown items
   const dropdownItems = profileDropdown.querySelectorAll(".dropdown-item");
-  dropdownItems.forEach(item => {
+  dropdownItems.forEach((item) => {
     item.addEventListener("click", () => {
       profileDropdown.classList.remove("active");
     });
@@ -189,14 +192,14 @@ const tabContents = document.querySelectorAll(".tab-content");
 navTabs.forEach((tab) => {
   tab.addEventListener("click", (e) => {
     e.preventDefault();
-    
+
     // Remove active class from all tabs and contents
     navTabs.forEach((t) => t.classList.remove("active"));
     tabContents.forEach((content) => content.classList.remove("active"));
-    
+
     // Add active class to clicked tab
     tab.classList.add("active");
-    
+
     // Show corresponding content
     const tabId = tab.getAttribute("data-tab");
     const tabContent = document.getElementById(tabId);
@@ -273,20 +276,24 @@ async function updateReportStats(sessionId) {
   // Load session summary statistics for comprehensive data
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries/stats`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
-    });
-    
+    const response = await fetch(
+      `${BACKEND_CONFIG.URL}/api/session-summaries/stats`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+
     if (response.ok) {
       const stats = await response.json();
-      
+
       // Update with comprehensive session summary data
-      const totalCount = stats.totalStudents || (totalPresent + totalAbsent);
+      const totalCount = stats.totalStudents || totalPresent + totalAbsent;
       const presentCount = stats.totalPresent || totalPresent;
       const absentCount = stats.totalAbsent || totalAbsent;
-      const rate = stats.averageAttendanceRate || 
+      const rate =
+        stats.averageAttendanceRate ||
         (totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : 0);
 
       // Update Reports section statistics with null checks
@@ -294,19 +301,22 @@ async function updateReportStats(sessionId) {
       const totalPresentEl = document.getElementById("totalPresent");
       const totalAbsentEl = document.getElementById("totalAbsent");
       const attendanceRateEl = document.getElementById("attendanceRate");
-      
+
       if (totalStudentsEl) totalStudentsEl.textContent = totalCount;
       if (totalPresentEl) totalPresentEl.textContent = presentCount;
       if (totalAbsentEl) totalAbsentEl.textContent = absentCount;
       if (attendanceRateEl) attendanceRateEl.textContent = rate + "%";
-      
+
       // Update session history stats if on that tab
       updateSessionHistoryStatsFromSummary(stats);
-      
+
       return; // Exit early if we got comprehensive data
     }
   } catch (error) {
-    console.warn('Failed to load session summary stats, using local data:', error);
+    console.warn(
+      "Failed to load session summary stats, using local data:",
+      error,
+    );
   }
 
   // Fallback to local data only
@@ -319,7 +329,7 @@ async function updateReportStats(sessionId) {
   const totalPresentEl = document.getElementById("totalPresent");
   const totalAbsentEl = document.getElementById("totalAbsent");
   const attendanceRateEl = document.getElementById("attendanceRate");
-  
+
   if (totalStudentsEl) totalStudentsEl.textContent = totalCount;
   if (totalPresentEl) totalPresentEl.textContent = totalPresent;
   if (totalAbsentEl) totalAbsentEl.textContent = totalAbsent;
@@ -329,14 +339,17 @@ async function updateReportStats(sessionId) {
 // Update session history stats from summary data
 function updateSessionHistoryStatsFromSummary(stats) {
   // Update session history statistics if elements exist
-  const totalSessionsEl = document.getElementById('totalSessions');
-  const totalStudentsHistEl = document.getElementById('totalStudentsHist');
-  const avgAttendanceRateEl = document.getElementById('avgAttendanceRate');
-  const totalScansEl = document.getElementById('totalScans');
-  
+  const totalSessionsEl = document.getElementById("totalSessions");
+  const totalStudentsHistEl = document.getElementById("totalStudentsHist");
+  const avgAttendanceRateEl = document.getElementById("avgAttendanceRate");
+  const totalScansEl = document.getElementById("totalScans");
+
   if (totalSessionsEl) totalSessionsEl.textContent = stats.totalSessions || 0;
-  if (totalStudentsHistEl) totalStudentsHistEl.textContent = stats.totalStudents || 0;
-  if (avgAttendanceRateEl) avgAttendanceRateEl.textContent = (stats.averageAttendanceRate || 0).toFixed(1) + '%';
+  if (totalStudentsHistEl)
+    totalStudentsHistEl.textContent = stats.totalStudents || 0;
+  if (avgAttendanceRateEl)
+    avgAttendanceRateEl.textContent =
+      (stats.averageAttendanceRate || 0).toFixed(1) + "%";
   if (totalScansEl) totalScansEl.textContent = stats.totalScans || 0;
 }
 
@@ -544,76 +557,94 @@ document
   .addEventListener("change", applyFilters);
 
 // Action Buttons
-document.getElementById("previewEmailBtn").addEventListener("click", async () => {
-  const filterDate = document.getElementById("filterDate").value;
-  const filterCourse = document.getElementById("filterCourse").value;
-  const filterSession = document.getElementById("filterSession").value;
-  
-  if (!filterDate && !filterCourse && !filterSession) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'No Filters Selected',
-      text: 'Please select at least one filter (date, course, or session) to preview email.',
-      confirmButtonColor: '#007bff'
-    });
-    return;
-  }
+document
+  .getElementById("previewEmailBtn")
+  .addEventListener("click", async () => {
+    const filterDate = document.getElementById("filterDate").value;
+    const filterCourse = document.getElementById("filterCourse").value;
+    const filterSession = document.getElementById("filterSession").value;
 
-  // Show loading state
-  Swal.fire({
-    title: 'Generating Email Preview...',
-    text: 'Please wait while we generate the email preview.',
-    didOpen: () => {
-      Swal.showLoading();
-    },
-    allowOutsideClick: false,
-    allowEscapeKey: false
-  });
-
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${BACKEND_CONFIG.URL}/api/emails/preview`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        emailType: 'weekly_summary',
-        recipientType: 'coordinator',
-        data: {
-          coordinatorName: 'Current Coordinator',
-          weekData: {
-            totalSessions: filteredRecords.length || 0,
-            totalStudents: new Set(filteredRecords.map(r => r.name)).size || 0,
-            avgAttendance: filteredRecords.length > 0 ? 
-              (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0,
-            departments: [
-              {
-                name: filterCourse || 'All Courses',
-                sessions: filteredRecords.length || 0,
-                students: new Set(filteredRecords.map(r => r.name)).size || 0,
-                avgAttendance: filteredRecords.length > 0 ? 
-                  (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0
-              }
-            ]
-          }
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to generate email preview');
+    if (!filterDate && !filterCourse && !filterSession) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Filters Selected",
+        text: "Please select at least one filter (date, course, or session) to preview email.",
+        confirmButtonColor: "#007bff",
+      });
+      return;
     }
 
-    const result = await response.json();
-    
-    Swal.close();
-    
-    // Show preview in modal
+    // Show loading state
     Swal.fire({
-      title: 'Email Preview',
-      html: `
+      title: "Generating Email Preview...",
+      text: "Please wait while we generate the email preview.",
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    });
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${BACKEND_CONFIG.URL}/api/emails/preview`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          emailType: "weekly_summary",
+          recipientType: "coordinator",
+          data: {
+            coordinatorName: "Current Coordinator",
+            weekData: {
+              totalSessions: filteredRecords.length || 0,
+              totalStudents:
+                new Set(filteredRecords.map((r) => r.name)).size || 0,
+              avgAttendance:
+                filteredRecords.length > 0
+                  ? (
+                      (filteredRecords.filter((r) => r.status === "Present")
+                        .length /
+                        filteredRecords.length) *
+                      100
+                    ).toFixed(1)
+                  : 0,
+              departments: [
+                {
+                  name: filterCourse || "All Courses",
+                  sessions: filteredRecords.length || 0,
+                  students:
+                    new Set(filteredRecords.map((r) => r.name)).size || 0,
+                  avgAttendance:
+                    filteredRecords.length > 0
+                      ? (
+                          (filteredRecords.filter((r) => r.status === "Present")
+                            .length /
+                            filteredRecords.length) *
+                          100
+                        ).toFixed(1)
+                      : 0,
+                },
+              ],
+            },
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate email preview");
+      }
+
+      const result = await response.json();
+
+      Swal.close();
+
+      // Show preview in modal
+      Swal.fire({
+        title: "Email Preview",
+        html: `
         <div style="text-align: left; max-height: 400px; overflow-y: auto;">
           <h3>Subject: Weekly Attendance Report</h3>
           <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
@@ -621,72 +652,79 @@ document.getElementById("previewEmailBtn").addEventListener("click", async () =>
           </div>
         </div>
       `,
-      width: '600px',
-      confirmButtonText: 'Close',
-      confirmButtonColor: '#007bff'
-    });
-
-  } catch (error) {
-    console.error('Email preview failed:', error);
-    Swal.close();
-    Swal.fire({
-      icon: 'error',
-      title: 'Preview Failed',
-      text: 'Failed to generate email preview. Please try again.',
-      confirmButtonColor: '#dc3545'
-    });
-  }
-});
+        width: "600px",
+        confirmButtonText: "Close",
+        confirmButtonColor: "#007bff",
+      });
+    } catch (error) {
+      console.error("Email preview failed:", error);
+      Swal.close();
+      Swal.fire({
+        icon: "error",
+        title: "Preview Failed",
+        text: "Failed to generate email preview. Please try again.",
+        confirmButtonColor: "#dc3545",
+      });
+    }
+  });
 
 // Send Email Button
 document.getElementById("sendEmailBtn").addEventListener("click", async () => {
   const filterDate = document.getElementById("filterDate").value;
   const filterCourse = document.getElementById("filterCourse").value;
   const filterSession = document.getElementById("filterSession").value;
-  
+
   if (!filterDate && !filterCourse && !filterSession) {
     Swal.fire({
-      icon: 'warning',
-      title: 'No Filters Selected',
-      text: 'Please select at least one filter (date, course, or session) to send email.',
-      confirmButtonColor: '#007bff'
+      icon: "warning",
+      title: "No Filters Selected",
+      text: "Please select at least one filter (date, course, or session) to send email.",
+      confirmButtonColor: "#007bff",
     });
     return;
   }
 
   if (filteredRecords.length === 0) {
     Swal.fire({
-      icon: 'warning',
-      title: 'No Data',
-      text: 'No attendance records to send. Please select filters to generate data.',
-      confirmButtonColor: '#007bff'
+      icon: "warning",
+      title: "No Data",
+      text: "No attendance records to send. Please select filters to generate data.",
+      confirmButtonColor: "#007bff",
     });
     return;
   }
 
   // Confirm before sending
   const result = await Swal.fire({
-    title: 'Send Email Report?',
+    title: "Send Email Report?",
     html: `
       <div style="text-align: left;">
         <p>This will send a weekly attendance report with the following details:</p>
         <ul>
-          <li><strong>Total Students:</strong> ${new Set(filteredRecords.map(r => r.name)).size}</li>
+          <li><strong>Total Students:</strong> ${new Set(filteredRecords.map((r) => r.name)).size}</li>
           <li><strong>Total Records:</strong> ${filteredRecords.length}</li>
-          <li><strong>Average Attendance:</strong> ${filteredRecords.length > 0 ? 
-            (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0}%</li>
-          <li><strong>Course:</strong> ${filterCourse || 'All Courses'}</li>
-          <li><strong>Date:</strong> ${filterDate || 'All Dates'}</li>
+          <li><strong>Average Attendance:</strong> ${
+            filteredRecords.length > 0
+              ? (
+                  (filteredRecords.filter((r) => r.status === "Present")
+                    .length /
+                    filteredRecords.length) *
+                  100
+                ).toFixed(1)
+              : 0
+          }%</li>
+          <li><strong>Course:</strong> ${filterCourse || "All Courses"}</li>
+          <li><strong>Date:</strong> ${filterDate || "All Dates"}</li>
         </ul>
         <p><em>The email will be sent to your registered email address.</em></p>
       </div>
     `,
-    icon: 'question',
+    icon: "question",
     showCancelButton: true,
-    confirmButtonText: 'Send Email',
-    cancelButtonText: 'Cancel',
-    confirmButtonColor: '#007bff',
-    cancelButtonColor: '#6c757d'
+    confirmButtonText: "Send Email",
+    cancelButtonText: "Cancel",
+    confirmButtonColor: "#007bff",
+    cancelButtonColor: "#6c757d",
   });
 
   if (!result.isConfirmed) {
@@ -695,60 +733,75 @@ document.getElementById("sendEmailBtn").addEventListener("click", async () => {
 
   // Show loading state
   Swal.fire({
-    title: 'Sending Email...',
-    text: 'Please wait while we send the attendance report.',
+    title: "Sending Email...",
+    text: "Please wait while we send the attendance report.",
     didOpen: () => {
       Swal.showLoading();
     },
     allowOutsideClick: false,
-    allowEscapeKey: false
+    allowEscapeKey: false,
   });
 
   try {
     const token = localStorage.getItem("token");
     const response = await fetch(`${BACKEND_CONFIG.URL}/api/emails/test`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        email: 'coordinator@example.com', // This would be the coordinator's actual email
-        emailType: 'weekly_summary',
-        recipientType: 'coordinator',
+        email: "coordinator@example.com", // This would be the coordinator's actual email
+        emailType: "weekly_summary",
+        recipientType: "coordinator",
         data: {
-          coordinatorName: 'Current Coordinator',
+          coordinatorName: "Current Coordinator",
           weekData: {
             totalSessions: filteredRecords.length || 0,
-            totalStudents: new Set(filteredRecords.map(r => r.name)).size || 0,
-            avgAttendance: filteredRecords.length > 0 ? 
-              (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0,
+            totalStudents:
+              new Set(filteredRecords.map((r) => r.name)).size || 0,
+            avgAttendance:
+              filteredRecords.length > 0
+                ? (
+                    (filteredRecords.filter((r) => r.status === "Present")
+                      .length /
+                      filteredRecords.length) *
+                    100
+                  ).toFixed(1)
+                : 0,
             departments: [
               {
-                name: filterCourse || 'All Courses',
+                name: filterCourse || "All Courses",
                 sessions: filteredRecords.length || 0,
-                students: new Set(filteredRecords.map(r => r.name)).size || 0,
-                avgAttendance: filteredRecords.length > 0 ? 
-                  (filteredRecords.filter(r => r.status === 'Present').length / filteredRecords.length * 100).toFixed(1) : 0
-              }
-            ]
-          }
-        }
-      })
+                students: new Set(filteredRecords.map((r) => r.name)).size || 0,
+                avgAttendance:
+                  filteredRecords.length > 0
+                    ? (
+                        (filteredRecords.filter((r) => r.status === "Present")
+                          .length /
+                          filteredRecords.length) *
+                        100
+                      ).toFixed(1)
+                    : 0,
+              },
+            ],
+          },
+        },
+      }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to send email');
+      throw new Error("Failed to send email");
     }
 
     const emailResult = await response.json();
-    
+
     Swal.close();
-    
+
     if (emailResult.success) {
       Swal.fire({
-        icon: 'success',
-        title: 'Email Sent Successfully!',
+        icon: "success",
+        title: "Email Sent Successfully!",
         html: `
           <div style="text-align: left;">
             <p>The attendance report has been sent to your email.</p>
@@ -756,20 +809,19 @@ document.getElementById("sendEmailBtn").addEventListener("click", async () => {
             <p><em>Please check your inbox (and spam folder) for the email.</em></p>
           </div>
         `,
-        confirmButtonColor: '#007bff'
+        confirmButtonColor: "#007bff",
       });
     } else {
-      throw new Error(emailResult.error || 'Email sending failed');
+      throw new Error(emailResult.error || "Email sending failed");
     }
-
   } catch (error) {
-    console.error('Send email failed:', error);
+    console.error("Send email failed:", error);
     Swal.close();
     Swal.fire({
-      icon: 'error',
-      title: 'Email Send Failed',
-      text: 'Failed to send email. Please check your email configuration and try again.',
-      confirmButtonColor: '#dc3545'
+      icon: "error",
+      title: "Email Send Failed",
+      text: "Failed to send email. Please check your email configuration and try again.",
+      confirmButtonColor: "#dc3545",
     });
   }
 });
@@ -777,34 +829,34 @@ document.getElementById("sendEmailBtn").addEventListener("click", async () => {
 document.getElementById("exportPdfBtn").addEventListener("click", () => {
   if (filteredRecords.length === 0) {
     Swal.fire({
-      icon: 'warning',
-      title: 'No Data',
-      text: 'No attendance records to export. Please select filters to generate data.',
-      confirmButtonColor: '#007bff'
+      icon: "warning",
+      title: "No Data",
+      text: "No attendance records to export. Please select filters to generate data.",
+      confirmButtonColor: "#007bff",
     });
     return;
   }
-  
+
   // Show loading state
   Swal.fire({
-    title: 'Generating PDF...',
-    text: 'Please wait while we generate your PDF report.',
+    title: "Generating PDF...",
+    text: "Please wait while we generate your PDF report.",
     didOpen: () => {
       Swal.showLoading();
     },
     allowOutsideClick: false,
-    allowEscapeKey: false
+    allowEscapeKey: false,
   });
-  
+
   try {
     exportToPDF();
   } catch (error) {
-    console.error('PDF export failed:', error);
+    console.error("PDF export failed:", error);
     Swal.fire({
-      icon: 'error',
-      title: 'Export Failed',
-      text: 'Failed to generate PDF. Please try again or contact support.',
-      confirmButtonColor: '#dc3545'
+      icon: "error",
+      title: "Export Failed",
+      text: "Failed to generate PDF. Please try again or contact support.",
+      confirmButtonColor: "#dc3545",
     });
   }
 });
@@ -812,138 +864,157 @@ document.getElementById("exportPdfBtn").addEventListener("click", () => {
 // PDF Export Functionality
 function exportToPDF() {
   const { jsPDF } = window.jspdf;
-  
+
   // Get current filter values
   const filterDate = document.getElementById("filterDate").value;
   const filterCourse = document.getElementById("filterCourse").value;
   const filterSession = document.getElementById("filterSession").value;
-  
+
   // Create PDF document
   const pdf = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4'
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4",
   });
-  
+
   // Add custom font for better text rendering
-  pdf.setFont('helvetica');
-  
+  pdf.setFont("helvetica");
+
   // PDF Content
   let yPosition = 20;
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 15;
-  const contentWidth = pageWidth - (margin * 2);
-  
+  const contentWidth = pageWidth - margin * 2;
+
   // Header
   pdf.setFontSize(20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('AttendNet - Attendance Report', margin, yPosition);
-  
+  pdf.setFont("helvetica", "bold");
+  pdf.text("AttendNet - Attendance Report", margin, yPosition);
+
   yPosition += 15;
   pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'normal');
-  
+  pdf.setFont("helvetica", "normal");
+
   // Filter Information
-  let filterInfo = 'Report Filters: ';
+  let filterInfo = "Report Filters: ";
   if (filterDate) filterInfo += `Date: ${filterDate} `;
   if (filterCourse) filterInfo += `Course: ${filterCourse} `;
   if (filterSession) filterInfo += `Session: ${filterSession}`;
-  if (filterInfo === 'Report Filters: ') filterInfo = 'All Records';
-  
+  if (filterInfo === "Report Filters: ") filterInfo = "All Records";
+
   pdf.text(filterInfo, margin, yPosition);
   yPosition += 12;
-  
+
   // Statistics Summary
   const totalStudents = filteredRecords.length;
-  const presentStudents = filteredRecords.filter(r => r.status === 'Present').length;
-  const absentStudents = filteredRecords.filter(r => r.status === 'Absent').length;
-  const attendanceRate = totalStudents > 0 ? ((presentStudents / totalStudents) * 100).toFixed(1) : 0;
-  
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Summary Statistics:', margin, yPosition);
+  const presentStudents = filteredRecords.filter(
+    (r) => r.status === "Present",
+  ).length;
+  const absentStudents = filteredRecords.filter(
+    (r) => r.status === "Absent",
+  ).length;
+  const attendanceRate =
+    totalStudents > 0
+      ? ((presentStudents / totalStudents) * 100).toFixed(1)
+      : 0;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Summary Statistics:", margin, yPosition);
   yPosition += 10;
-  
-  pdf.setFont('helvetica', 'normal');
+
+  pdf.setFont("helvetica", "normal");
   pdf.text(`Total Students: ${totalStudents}`, margin + 5, yPosition);
   yPosition += 8;
-  pdf.text(`Present: ${presentStudents} (${attendanceRate}%)`, margin + 5, yPosition);
+  pdf.text(
+    `Present: ${presentStudents} (${attendanceRate}%)`,
+    margin + 5,
+    yPosition,
+  );
   yPosition += 8;
   pdf.text(`Absent: ${absentStudents}`, margin + 5, yPosition);
   yPosition += 15;
-  
+
   // Table Headers
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Attendance Details:', margin, yPosition);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Attendance Details:", margin, yPosition);
   yPosition += 10;
-  
+
   // Table setup with clean design
   const tableStartY = yPosition;
   const colWidths = [20, 60, 50, 35, 35, 40]; // Smaller name column, redistributed space
-  const headers = ['S.No', 'Student Name', 'Department', 'Course', 'Status', 'Timestamp', 'Scans'];
+  const headers = [
+    "S.No",
+    "Student Name",
+    "Department",
+    "Course",
+    "Status",
+    "Timestamp",
+    "Scans",
+  ];
   const rowHeight = 12;
-  
+
   // Simple table headers
   pdf.setFillColor(240, 240, 240);
   pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
-  
+
   // Draw header background
   pdf.rect(margin, yPosition, contentWidth, rowHeight);
-  
+
   let currentX = margin;
   headers.forEach((header, index) => {
     pdf.text(header, currentX + 2, yPosition + 8);
     currentX += colWidths[index];
   });
-  
+
   yPosition += rowHeight;
-  
+
   // Table data with clean styling
   pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  
+
   filteredRecords.forEach((record, index) => {
     if (yPosition > pdf.internal.pageSize.getHeight() - 30) {
       pdf.addPage();
       yPosition = 20;
-      
+
       // Redraw headers on new page
       pdf.setFillColor(240, 240, 240);
       pdf.setTextColor(0, 0, 0);
-      pdf.setFont('helvetica', 'bold');
+      pdf.setFont("helvetica", "bold");
       pdf.setFontSize(10);
       pdf.rect(margin, yPosition, contentWidth, rowHeight);
-      
+
       currentX = margin;
       headers.forEach((header, headerIndex) => {
         pdf.text(header, currentX + 2, yPosition + 8);
         currentX += colWidths[headerIndex];
       });
-      
+
       yPosition += rowHeight;
       pdf.setTextColor(0, 0, 0);
-      pdf.setFont('helvetica', 'normal');
+      pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9);
     }
-    
+
     // Draw table border for each row
     pdf.setDrawColor(200, 200, 200);
     pdf.setLineWidth(0.1);
     pdf.rect(margin, yPosition, contentWidth, rowHeight);
-    
+
     // Row data without session column
     const rowData = [
       index + 1,
-      record.name || 'N/A',
-      record.department || 'N/A',
-      record.course || 'N/A',
-      record.status || 'N/A',
-      record.timestamp || 'N/A',
-      record.scans || 'N/A'
+      record.name || "N/A",
+      record.department || "N/A",
+      record.course || "N/A",
+      record.status || "N/A",
+      record.timestamp || "N/A",
+      record.scans || "N/A",
     ];
-    
+
     currentX = margin;
     rowData.forEach((data, colIndex) => {
       pdf.setTextColor(0, 0, 0);
@@ -955,50 +1026,57 @@ function exportToPDF() {
       pdf.text(text, currentX + 2, yPosition + 8);
       currentX += colWidths[colIndex];
     });
-    
+
     yPosition += rowHeight;
   });
-  
+
   // Simple footer
-  const finalY = Math.max(yPosition + 20, pdf.internal.pageSize.getHeight() - 20);
-  
+  const finalY = Math.max(
+    yPosition + 20,
+    pdf.internal.pageSize.getHeight() - 20,
+  );
+
   pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'italic');
+  pdf.setFont("helvetica", "italic");
   pdf.setTextColor(100, 100, 100);
   const reportDate = new Date().toLocaleString();
   pdf.text(`Generated on: ${reportDate}`, margin, finalY);
-  
+
   // Add page numbers
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
   pdf.setTextColor(150, 150, 150);
   const totalPages = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
-      pdf.text(`Page ${i} of ${totalPages}`, margin + contentWidth - 40, pdf.internal.pageSize.getHeight() - 10);
+    pdf.setPage(i);
+    pdf.text(
+      `Page ${i} of ${totalPages}`,
+      margin + contentWidth - 40,
+      pdf.internal.pageSize.getHeight() - 10,
+    );
   }
-  
+
   // Generate filename based on filters
-  let filename = 'attendance-report.pdf';
+  let filename = "attendance-report.pdf";
   if (filterDate) filename = `attendance-${filterDate}.pdf`;
-  if (filterCourse) filename = `attendance-${filterCourse.replace(/\s+/g, '-').toLowerCase()}.pdf`;
-  if (filterDate && filterCourse) filename = `attendance-${filterCourse.replace(/\s+/g, '-').toLowerCase()}-${filterDate}.pdf`;
-  
+  if (filterCourse)
+    filename = `attendance-${filterCourse.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+  if (filterDate && filterCourse)
+    filename = `attendance-${filterCourse.replace(/\s+/g, "-").toLowerCase()}-${filterDate}.pdf`;
+
   // Save the PDF
   pdf.save(filename);
-  
+
   // Show success message
   Swal.fire({
-    icon: 'success',
-    title: 'Export Successful',
+    icon: "success",
+    title: "Export Successful",
     text: `PDF report "${filename}" has been downloaded successfully!`,
     timer: 3000,
     showConfirmButton: false,
-    position: 'top-end'
+    position: "top-end",
   });
 }
-
-
 
 // Settings Tab & Logout
 document.getElementById("settingsLink").addEventListener("click", (e) => {
@@ -1453,13 +1531,13 @@ async function scanSession(sessionId) {
     });
 
     const data = await res.json();
-    
+
     // Handle cooldown error
     if (res.status === 429) {
       resultsContainer.innerHTML = `<div style="padding: 1rem; color: #856404; background: #fff3cd; border-radius: 4px;">
         <i class="fas fa-clock"></i> ${data.message}
       </div>`;
-      
+
       // Show countdown if cooldown time provided
       if (data.cooldown) {
         let remainingTime = data.cooldown;
@@ -1467,7 +1545,7 @@ async function scanSession(sessionId) {
           remainingTime--;
           if (remainingTime <= 0) {
             clearInterval(countdownInterval);
-            resultsContainer.innerHTML = '';
+            resultsContainer.innerHTML = "";
             return;
           }
           resultsContainer.innerHTML = `<div style="padding: 1rem; color: #856404; background: #fff3cd; border-radius: 4px;">
@@ -1477,7 +1555,7 @@ async function scanSession(sessionId) {
       }
       throw new Error(data.message);
     }
-    
+
     if (!res.ok)
       throw new Error((data && data.message) || "Attendance scan failed");
 
@@ -1496,7 +1574,7 @@ async function scanSession(sessionId) {
     return { presentArr, absentArr, counts };
   } catch (err) {
     console.error("Scan error:", err);
-    if (!err.message.includes('Please wait')) {
+    if (!err.message.includes("Please wait")) {
       resultsContainer.innerHTML = `<div style="padding: 1rem; color: #721c24; background: #f8d7da; border-radius: 4px;">Error: ${err.message || err}</div>`;
     }
     throw err;
@@ -1703,17 +1781,17 @@ function renderSessionList(sessions) {
   });
 
   // Show/hide auto-scan status based on active sessions
-  const autoScanStatus = document.getElementById('autoScanStatus');
+  const autoScanStatus = document.getElementById("autoScanStatus");
   if (autoScanStatus) {
     if (active.length > 0) {
-      autoScanStatus.style.display = 'block';
+      autoScanStatus.style.display = "block";
       // If there's no current auto-scan session, set it to the first active session
       if (!currentAutoScanSession && active[0].session.interval > 0) {
         currentAutoScanSession = active[0].session;
         updateAutoScanStatus(false, currentAutoScanSession.interval);
       }
     } else {
-      autoScanStatus.style.display = 'none';
+      autoScanStatus.style.display = "none";
       currentAutoScanSession = null;
     }
   }
@@ -1851,28 +1929,28 @@ let autoScanInterval = null;
 
 // Auto-scan control functions
 function startAutoScanForCurrentSession() {
-  const activeSessions = currentSessions.filter(s => s.status === 'active');
+  const activeSessions = currentSessions.filter((s) => s.status === "active");
   if (activeSessions.length === 0) {
-    Swal.fire('Warning', 'No active sessions found', 'warning');
+    Swal.fire("Warning", "No active sessions found", "warning");
     return;
   }
-  
+
   currentAutoScanSession = activeSessions[0]; // Use the first active session
   if (!currentAutoScanSession) return;
-  
+
   // Show auto-scan status
   updateAutoScanStatus(true, currentAutoScanSession.interval);
-  
+
   // Start the countdown
   startAutoScanCountdown(currentAutoScanSession.interval);
-  
+
   // Start the actual scanning
   startCountdown(currentAutoScanSession._id, currentAutoScanSession.interval);
-  
+
   Swal.fire({
     toast: true,
-    position: 'top-end',
-    icon: 'success',
+    position: "top-end",
+    icon: "success",
     title: `Auto-scan started for ${currentAutoScanSession.course}`,
     text: `Scanning every ${currentAutoScanSession.interval} minutes`,
     showConfirmButton: false,
@@ -1883,29 +1961,29 @@ function startAutoScanForCurrentSession() {
 function resumeAutoScanForCurrentSession() {
   if (!currentAutoScanSession) {
     // Find an active session to resume
-    const activeSessions = currentSessions.filter(s => s.status === 'active');
+    const activeSessions = currentSessions.filter((s) => s.status === "active");
     if (activeSessions.length === 0) {
-      Swal.fire('Warning', 'No active sessions found', 'warning');
+      Swal.fire("Warning", "No active sessions found", "warning");
       return;
     }
-    
+
     currentAutoScanSession = activeSessions[0];
     if (!currentAutoScanSession) return;
   }
-  
+
   // Show auto-scan status
   updateAutoScanStatus(true, currentAutoScanSession.interval);
-  
+
   // Start the countdown
   startAutoScanCountdown(currentAutoScanSession.interval);
-  
+
   // Start the actual scanning
   startCountdown(currentAutoScanSession._id, currentAutoScanSession.interval);
-  
+
   Swal.fire({
     toast: true,
-    position: 'top-end',
-    icon: 'success',
+    position: "top-end",
+    icon: "success",
     title: `Auto-scan resumed for ${currentAutoScanSession.course}`,
     text: `Scanning every ${currentAutoScanSession.interval} minutes`,
     showConfirmButton: false,
@@ -1915,105 +1993,107 @@ function resumeAutoScanForCurrentSession() {
 
 function stopAutoScanForCurrentSession() {
   if (!currentAutoScanSession) return;
-  
+
   // Stop countdown
   stopCountdown();
-  
+
   // Clear auto-scan countdown
   if (autoScanCountdown) {
     clearInterval(autoScanCountdown);
     autoScanCountdown = null;
   }
-  
+
   // Clear auto-scan interval
   if (autoScanInterval) {
     clearInterval(autoScanInterval);
     autoScanInterval = null;
   }
-  
+
   // Make sure the status panel is visible before updating
-  const statusDiv = document.getElementById('autoScanStatus');
+  const statusDiv = document.getElementById("autoScanStatus");
   if (statusDiv) {
-    statusDiv.style.display = 'block';
+    statusDiv.style.display = "block";
   }
-  
+
   // Update status to paused but keep the session reference
   updateAutoScanStatus(false, currentAutoScanSession.interval);
-  
+
   // Don't clear currentAutoScanSession - keep it for resume functionality
-  
+
   // Force immediate button state update
   setTimeout(() => {
-    const startBtn = document.getElementById('startAutoScan');
-    const stopBtn = document.getElementById('stopAutoScan');
+    const startBtn = document.getElementById("startAutoScan");
+    const stopBtn = document.getElementById("stopAutoScan");
     if (startBtn) {
-      startBtn.style.display = 'inline-block';
+      startBtn.style.display = "inline-block";
       startBtn.disabled = false;
     }
     if (stopBtn) {
-      stopBtn.style.display = 'none';
+      stopBtn.style.display = "none";
       stopBtn.disabled = true;
     }
   }, 10);
-  
+
   Swal.fire({
     toast: true,
-    position: 'top-end',
-    icon: 'info',
-    title: 'Auto-scan paused',
+    position: "top-end",
+    icon: "info",
+    title: "Auto-scan paused",
     showConfirmButton: false,
     timer: 3000,
   });
 }
 
 function updateAutoScanStatus(isActive, interval = 0) {
-  const statusDiv = document.getElementById('autoScanStatus');
-  const statusIndicator = document.getElementById('scanStatusIndicator');
-  const statusText = document.getElementById('scanStatusText');
-  const countdownDiv = document.getElementById('scanCountdown');
-  const countdownText = document.getElementById('scanCountdownText');
-  const startBtn = document.getElementById('startAutoScan');
-  const stopBtn = document.getElementById('stopAutoScan');
-  
+  const statusDiv = document.getElementById("autoScanStatus");
+  const statusIndicator = document.getElementById("scanStatusIndicator");
+  const statusText = document.getElementById("scanStatusText");
+  const countdownDiv = document.getElementById("scanCountdown");
+  const countdownText = document.getElementById("scanCountdownText");
+  const startBtn = document.getElementById("startAutoScan");
+  const stopBtn = document.getElementById("stopAutoScan");
+
   if (!statusDiv || !statusIndicator || !statusText) {
-    console.warn('Auto-scan status elements not found');
+    console.warn("Auto-scan status elements not found");
     return;
   }
-  
+
   if (isActive) {
-    statusDiv.style.display = 'block';
-    statusIndicator.innerHTML = '<i class="fas fa-play-circle" style="color: #28a745;"></i>';
-    statusText.textContent = 'Active';
-    
+    statusDiv.style.display = "block";
+    statusIndicator.innerHTML =
+      '<i class="fas fa-play-circle" style="color: #28a745;"></i>';
+    statusText.textContent = "Active";
+
     if (countdownDiv && countdownText) {
-      countdownDiv.style.display = 'block';
+      countdownDiv.style.display = "block";
       countdownText.textContent = `Next scan in ${interval}:--`;
     }
-    
+
     if (startBtn) {
-      startBtn.style.display = 'none';
+      startBtn.style.display = "none";
       startBtn.disabled = true;
     }
     if (stopBtn) {
-      stopBtn.style.display = 'inline-block';
+      stopBtn.style.display = "inline-block";
       stopBtn.disabled = false;
     }
   } else {
-    statusDiv.style.display = 'block';
-    statusIndicator.innerHTML = '<i class="fas fa-pause-circle" style="color: #6c757d;"></i>';
-    statusText.textContent = 'Paused';
-    
+    statusDiv.style.display = "block";
+    statusIndicator.innerHTML =
+      '<i class="fas fa-pause-circle" style="color: #6c757d;"></i>';
+    statusText.textContent = "Paused";
+
     if (countdownDiv && countdownText) {
-      countdownDiv.style.display = 'block';
+      countdownDiv.style.display = "block";
       countdownText.textContent = `Paused (${interval}min interval)`;
     }
-    
+
     if (startBtn) {
-      startBtn.style.display = 'inline-block';
+      startBtn.style.display = "inline-block";
       startBtn.disabled = false;
     }
     if (stopBtn) {
-      stopBtn.style.display = 'none';
+      stopBtn.style.display = "none";
       stopBtn.disabled = true;
     }
   }
@@ -2021,23 +2101,23 @@ function updateAutoScanStatus(isActive, interval = 0) {
 
 function startAutoScanCountdown(intervalMinutes) {
   let remainingSeconds = intervalMinutes * 60;
-  
+
   if (autoScanCountdown) {
     clearInterval(autoScanCountdown);
   }
-  
+
   autoScanCountdown = setInterval(() => {
     remainingSeconds--;
-    
+
     const minutes = Math.floor(remainingSeconds / 60);
     const seconds = remainingSeconds % 60;
-    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-    const countdownText = document.getElementById('scanCountdownText');
+    const timeString = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+    const countdownText = document.getElementById("scanCountdownText");
     if (countdownText) {
       countdownText.textContent = timeString;
     }
-    
+
     if (remainingSeconds <= 0) {
       clearInterval(autoScanCountdown);
       // Restart countdown for next interval
@@ -2057,17 +2137,17 @@ window.addEventListener("DOMContentLoaded", () => {
   updateReportStats();
   loadAvailableDepartments();
   initSocket();
-  
+
   // Initialize auto-scan status panel
-  const autoScanStatus = document.getElementById('autoScanStatus');
+  const autoScanStatus = document.getElementById("autoScanStatus");
   if (autoScanStatus) {
-    autoScanStatus.style.display = 'none';
+    autoScanStatus.style.display = "none";
   }
-  
+
   // Initialize session history and load stats immediately
   initSessionHistory();
   loadSessionHistoryStats();
-  
+
   // Load coordinator sessions automatically on login
   loadCoordinatorSessions();
 });
@@ -2101,18 +2181,18 @@ function initSocket() {
       showConfirmButton: false,
       timer: 3000,
     });
-    
+
     // Auto-start auto-scan if session has interval > 0
     if (session.interval && session.interval > 0) {
       currentAutoScanSession = session;
       updateAutoScanStatus(true, session.interval);
       startAutoScanCountdown(session.interval);
       startCountdown(session._id, session.interval);
-      
+
       Swal.fire({
         toast: true,
-        position: 'top-end',
-        icon: 'success',
+        position: "top-end",
+        icon: "success",
         title: `Auto-scan started for ${session.course}`,
         text: `Scanning every ${session.interval} minutes`,
         showConfirmButton: false,
@@ -2161,20 +2241,23 @@ function initSocket() {
   // Listen for session ending events
   socket.on("sessionEnded", (data) => {
     console.log("sessionEnded event", data);
-    
+
     // Stop countdown timer if this is the current session
     if (currentScanSessionId === data.sessionId) {
       stopCountdown();
     }
-    
+
     // Clear auto-scan session if it matches
-    if (currentAutoScanSession && currentAutoScanSession._id === data.sessionId) {
+    if (
+      currentAutoScanSession &&
+      currentAutoScanSession._id === data.sessionId
+    ) {
       currentAutoScanSession = null;
     }
-    
+
     // Reload sessions to move the ended session to the ended section
     loadCoordinatorSessions();
-    
+
     // Show notification
     Swal.fire({
       toast: true,
@@ -2190,19 +2273,19 @@ function initSocket() {
   // Listen for session summary creation events
   socket.on("sessionSummaryCreated", (data) => {
     console.log("sessionSummaryCreated event", data);
-    
+
     // Update reports section with new comprehensive data
     updateReportStats();
-    
+
     // Always refresh session history stats when session completes
     loadSessionHistoryStats();
-    
+
     // Refresh session history if on that tab
-    const activeTab = document.querySelector('.tab-content.active');
-    if (activeTab && activeTab.id === 'session-history') {
+    const activeTab = document.querySelector(".tab-content.active");
+    if (activeTab && activeTab.id === "session-history") {
       loadSessionHistory();
     }
-    
+
     // Show notification for session completion
     Swal.fire({
       toast: true,
@@ -2549,57 +2632,57 @@ let historyFilters = {};
 
 function initSessionHistory() {
   // Load session history when tab is shown
-  document.addEventListener('click', (e) => {
+  document.addEventListener("click", (e) => {
     if (e.target.matches('[data-tab="session-history"]')) {
       loadSessionHistory();
       loadSessionHistoryStats();
     }
   });
-  
+
   // Filter buttons
-  const applyFiltersBtn = document.getElementById('applyHistoryFilters');
+  const applyFiltersBtn = document.getElementById("applyHistoryFilters");
   if (applyFiltersBtn) {
-    applyFiltersBtn.addEventListener('click', () => {
+    applyFiltersBtn.addEventListener("click", () => {
       historyFilters = {
-        dateFrom: document.getElementById('historyDateFrom')?.value || '',
-        dateTo: document.getElementById('historyDateTo')?.value || '',
-        department: document.getElementById('historyDepartment')?.value || '',
-        course: document.getElementById('historyCourse')?.value || ''
+        dateFrom: document.getElementById("historyDateFrom")?.value || "",
+        dateTo: document.getElementById("historyDateTo")?.value || "",
+        department: document.getElementById("historyDepartment")?.value || "",
+        course: document.getElementById("historyCourse")?.value || "",
       };
       historyCurrentPage = 1;
       loadSessionHistory();
       loadSessionHistoryStats();
     });
   }
-  
-  const clearFiltersBtn = document.getElementById('clearHistoryFilters');
+
+  const clearFiltersBtn = document.getElementById("clearHistoryFilters");
   if (clearFiltersBtn) {
-    clearFiltersBtn.addEventListener('click', () => {
-      document.getElementById('historyDateFrom').value = '';
-      document.getElementById('historyDateTo').value = '';
-      document.getElementById('historyDepartment').value = '';
-      document.getElementById('historyCourse').value = '';
+    clearFiltersBtn.addEventListener("click", () => {
+      document.getElementById("historyDateFrom").value = "";
+      document.getElementById("historyDateTo").value = "";
+      document.getElementById("historyDepartment").value = "";
+      document.getElementById("historyCourse").value = "";
       historyFilters = {};
       historyCurrentPage = 1;
       loadSessionHistory();
       loadSessionHistoryStats();
     });
   }
-  
+
   // Pagination buttons
-  const prevBtn = document.getElementById('historyPrevBtn');
+  const prevBtn = document.getElementById("historyPrevBtn");
   if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
+    prevBtn.addEventListener("click", () => {
       if (historyCurrentPage > 1) {
         historyCurrentPage--;
         loadSessionHistory();
       }
     });
   }
-  
-  const nextBtn = document.getElementById('historyNextBtn');
+
+  const nextBtn = document.getElementById("historyNextBtn");
   if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
+    nextBtn.addEventListener("click", () => {
       if (historyCurrentPage < historyTotalPages) {
         historyCurrentPage++;
         loadSessionHistory();
@@ -2613,26 +2696,30 @@ async function loadSessionHistory() {
     const params = new URLSearchParams({
       page: historyCurrentPage,
       limit: 10,
-      ...historyFilters
+      ...historyFilters,
     });
-    
+
     const token = localStorage.getItem("token");
-    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries?${params}`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
-    });
-    
-    if (!response.ok) throw new Error('Failed to load session history');
-    
+    const response = await fetch(
+      `${BACKEND_CONFIG.URL}/api/session-summaries?${params}`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+
+    if (!response.ok) throw new Error("Failed to load session history");
+
     const data = await response.json();
     renderSessionHistory(data.summaries);
     updateHistoryPagination(data.currentPage, data.totalPages);
   } catch (error) {
-    console.error('Error loading session history:', error);
-    const tbody = document.getElementById('sessionHistoryTableBody');
+    console.error("Error loading session history:", error);
+    const tbody = document.getElementById("sessionHistoryTableBody");
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #dc3545;">Error loading session history</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="10" style="text-align: center; color: #dc3545;">Error loading session history</td></tr>';
     }
   }
 }
@@ -2641,73 +2728,90 @@ async function loadSessionHistoryStats() {
   try {
     const params = new URLSearchParams(historyFilters);
     const token = localStorage.getItem("token");
-    
+
     // Show loading state
-    const elements = ['totalSessions', 'totalStudentsHist', 'avgAttendanceRate', 'totalScans'];
-    elements.forEach(id => {
+    const elements = [
+      "totalSessions",
+      "totalStudentsHist",
+      "avgAttendanceRate",
+      "totalScans",
+    ];
+    elements.forEach((id) => {
       const el = document.getElementById(id);
       if (el) {
-        el.textContent = '...';
-        el.style.opacity = '0.6';
+        el.textContent = "...";
+        el.style.opacity = "0.6";
       }
     });
-    
-    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries/stats?${params}`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
-    });
-    
-    if (!response.ok) throw new Error('Failed to load session statistics');
-    
+
+    const response = await fetch(
+      `${BACKEND_CONFIG.URL}/api/session-summaries/stats?${params}`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+
+    if (!response.ok) throw new Error("Failed to load session statistics");
+
     const stats = await response.json();
     renderSessionHistoryStats(stats);
-    
+
     // Add animation when data loads
-    elements.forEach(id => {
+    elements.forEach((id) => {
       const el = document.getElementById(id);
       if (el) {
-        el.style.transition = 'all 0.3s ease';
-        el.style.opacity = '1';
-        el.style.transform = 'scale(1.05)';
+        el.style.transition = "all 0.3s ease";
+        el.style.opacity = "1";
+        el.style.transform = "scale(1.05)";
         setTimeout(() => {
-          el.style.transform = 'scale(1)';
+          el.style.transform = "scale(1)";
         }, 200);
       }
     });
-    
   } catch (error) {
-    console.error('Error loading session statistics:', error);
-    
+    console.error("Error loading session statistics:", error);
+
     // Show error state
-    const elements = ['totalSessions', 'totalStudentsHist', 'avgAttendanceRate', 'totalScans'];
-    elements.forEach(id => {
+    const elements = [
+      "totalSessions",
+      "totalStudentsHist",
+      "avgAttendanceRate",
+      "totalScans",
+    ];
+    elements.forEach((id) => {
       const el = document.getElementById(id);
       if (el) {
-        el.textContent = 'Error';
-        el.style.color = '#dc3545';
-        el.style.opacity = '0.7';
+        el.textContent = "Error";
+        el.style.color = "#dc3545";
+        el.style.opacity = "0.7";
       }
     });
   }
 }
 
 function renderSessionHistory(summaries) {
-  const tbody = document.getElementById('sessionHistoryTableBody');
+  const tbody = document.getElementById("sessionHistoryTableBody");
   if (!tbody) return;
-  
+
   if (!summaries || summaries.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999;">No session history found</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="10" style="text-align: center; color: #999;">No session history found</td></tr>';
     return;
   }
-  
-  tbody.innerHTML = summaries.map(summary => {
-    const date = new Date(summary.date).toLocaleDateString();
-    const departments = summary.departments.slice(0, 2).join(', ') + 
-      (summary.departments.length > 2 ? ` +${summary.departments.length - 2}` : '');
-    const rate = summary.attendanceRate.toFixed(1);
-    
-    return `
+
+  tbody.innerHTML = summaries
+    .map((summary) => {
+      const date = new Date(summary.date).toLocaleDateString();
+      const departments =
+        summary.departments.slice(0, 2).join(", ") +
+        (summary.departments.length > 2
+          ? ` +${summary.departments.length - 2}`
+          : "");
+      const rate = summary.attendanceRate.toFixed(1);
+
+      return `
       <tr>
         <td>${date}</td>
         <td>${summary.course}</td>
@@ -2716,7 +2820,7 @@ function renderSessionHistory(summaries) {
         <td>${summary.totalStudents}</td>
         <td style="color: #28a745;">${summary.presentStudents}</td>
         <td style="color: #dc3545;">${summary.absentStudents}</td>
-        <td style="color: ${rate >= 80 ? '#28a745' : rate >= 60 ? '#ffc107' : '#dc3545'};">
+        <td style="color: ${rate >= 80 ? "#28a745" : rate >= 60 ? "#ffc107" : "#dc3545"};">
           ${rate}%
         </td>
         <td>${summary.totalScansPerformed}</td>
@@ -2727,51 +2831,58 @@ function renderSessionHistory(summaries) {
         </td>
       </tr>
     `;
-  }).join('');
+    })
+    .join("");
 }
 
 function renderSessionHistoryStats(stats) {
   // Update session history statistics with enhanced formatting
-  const totalSessionsEl = document.getElementById('totalSessions');
-  const totalStudentsHistEl = document.getElementById('totalStudentsHist');
-  const avgAttendanceRateEl = document.getElementById('avgAttendanceRate');
-  const totalScansEl = document.getElementById('totalScans');
-  
+  const totalSessionsEl = document.getElementById("totalSessions");
+  const totalStudentsHistEl = document.getElementById("totalStudentsHist");
+  const avgAttendanceRateEl = document.getElementById("avgAttendanceRate");
+  const totalScansEl = document.getElementById("totalScans");
+
   // Format and update total sessions
   if (totalSessionsEl) {
     const sessions = stats.totalSessions || 0;
     totalSessionsEl.textContent = sessions.toLocaleString();
-    totalSessionsEl.style.color = sessions > 0 ? '#007bff' : '#6c757d';
+    totalSessionsEl.style.color = sessions > 0 ? "#007bff" : "#6c757d";
   }
-  
+
   // Format and update total students
   if (totalStudentsHistEl) {
     const students = stats.totalStudents || 0;
     totalStudentsHistEl.textContent = students.toLocaleString();
-    totalStudentsHistEl.style.color = students > 0 ? '#28a745' : '#6c757d';
+    totalStudentsHistEl.style.color = students > 0 ? "#28a745" : "#6c757d";
   }
-  
+
   // Format and update average attendance rate
   if (avgAttendanceRateEl) {
     const rate = (stats.averageAttendanceRate || 0).toFixed(1);
-    avgAttendanceRateEl.textContent = rate + '%';
+    avgAttendanceRateEl.textContent = rate + "%";
     const rateValue = parseFloat(rate);
-    avgAttendanceRateEl.style.color = rateValue >= 80 ? '#28a745' : rateValue >= 60 ? '#ffc107' : '#dc3545';
+    avgAttendanceRateEl.style.color =
+      rateValue >= 80 ? "#28a745" : rateValue >= 60 ? "#ffc107" : "#dc3545";
   }
-  
+
   // Format and update total scans
   if (totalScansEl) {
     const scans = stats.totalScans || 0;
     totalScansEl.textContent = scans.toLocaleString();
-    totalScansEl.style.color = scans > 0 ? '#17a2b8' : '#6c757d';
+    totalScansEl.style.color = scans > 0 ? "#17a2b8" : "#6c757d";
   }
-  
+
   // Update stat icons with pulse animation for active data
-  const statCards = document.querySelectorAll('.stat-card');
+  const statCards = document.querySelectorAll(".stat-card");
   statCards.forEach((card, index) => {
-    const icon = card.querySelector('.stat-icon i');
-    if (icon && (stats.totalSessions > 0 || stats.totalStudents > 0 || stats.totalScans > 0)) {
-      icon.style.animation = 'pulse 2s infinite';
+    const icon = card.querySelector(".stat-icon i");
+    if (
+      icon &&
+      (stats.totalSessions > 0 ||
+        stats.totalStudents > 0 ||
+        stats.totalScans > 0)
+    ) {
+      icon.style.animation = "pulse 2s infinite";
     }
   });
 }
@@ -2779,11 +2890,11 @@ function renderSessionHistoryStats(stats) {
 function updateHistoryPagination(currentPage, totalPages) {
   historyCurrentPage = currentPage;
   historyTotalPages = totalPages;
-  
-  const pageInfo = document.getElementById('historyPageInfo');
-  const prevBtn = document.getElementById('historyPrevBtn');
-  const nextBtn = document.getElementById('historyNextBtn');
-  
+
+  const pageInfo = document.getElementById("historyPageInfo");
+  const prevBtn = document.getElementById("historyPrevBtn");
+  const nextBtn = document.getElementById("historyNextBtn");
+
   if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
   if (prevBtn) prevBtn.disabled = currentPage <= 1;
   if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
@@ -2792,35 +2903,42 @@ function updateHistoryPagination(currentPage, totalPages) {
 async function viewSessionDetails(summaryId) {
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`${BACKEND_CONFIG.URL}/api/session-summaries/${summaryId}`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
-    });
-    
-    if (!response.ok) throw new Error('Failed to load session details');
-    
+    const response = await fetch(
+      `${BACKEND_CONFIG.URL}/api/session-summaries/${summaryId}`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+
+    if (!response.ok) throw new Error("Failed to load session details");
+
     const summary = await response.json();
     showSessionDetailsModal(summary);
   } catch (error) {
-    console.error('Error loading session details:', error);
-    Swal.fire('Error', 'Failed to load session details', 'error');
+    console.error("Error loading session details:", error);
+    Swal.fire("Error", "Failed to load session details", "error");
   }
 }
 
 function showSessionDetailsModal(summary) {
   const date = new Date(summary.date).toLocaleDateString();
-  const departments = summary.departments.join(', ');
-  const recordsHtml = summary.attendanceRecords.map(record => `
+  const departments = summary.departments.join(", ");
+  const recordsHtml = summary.attendanceRecords
+    .map(
+      (record) => `
     <tr>
       <td>${record.name}</td>
       <td>${record.department}</td>
       <td>${record.presentCount}/${record.totalScans}</td>
       <td>${record.attendancePercentage.toFixed(1)}%</td>
-      <td><span class="badge ${record.status === 'present' ? 'bg-success' : 'bg-danger'}">${record.status}</span></td>
+      <td><span class="badge ${record.status === "present" ? "bg-success" : "bg-danger"}">${record.status}</span></td>
     </tr>
-  `).join('');
-  
+  `,
+    )
+    .join("");
+
   Swal.fire({
     title: `<strong>${summary.course}</strong> Session Details`,
     html: `
@@ -2852,8 +2970,8 @@ function showSessionDetailsModal(summary) {
         </div>
       </div>
     `,
-    width: '800px',
-    confirmButtonText: 'Close',
-    confirmButtonColor: '#007bff'
+    width: "800px",
+    confirmButtonText: "Close",
+    confirmButtonColor: "#007bff",
   });
 }
