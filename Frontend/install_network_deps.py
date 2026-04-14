@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#Generated this python script using to install the dependencies for network interface detection
 """
 Installation script for network interface detection dependencies
 Run this if you want better network interface detection

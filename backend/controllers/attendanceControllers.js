@@ -4,7 +4,8 @@ const User = require("../models/user");
 const emailController = require("../controllers/emailController");
 const { getIO } = require("../utils/socket");
 
-// perform scan logic given a session document, optionally a list of mac addresses
+// perform scan
+//  logic given a session document, optionally a list of mac addresses
 async function performScanForSession(session, connectedMacs = []) {
   if (!session || !session._id) throw new Error("Session required for scan");
   // refresh session from database to get latest data

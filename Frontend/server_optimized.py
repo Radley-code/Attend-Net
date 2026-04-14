@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+#this is an optimized server for the frontend that caches files and content types on the server.
 import http.server
 import socketserver
 import os
@@ -207,7 +209,7 @@ if __name__ == "__main__":
     print(f"  - Keep-alive connections")
     print(f"  - Multi-network interface support")
     print(f"\n Access from any device on your network using the IP addresses above")
-    print(f"🔧 Works with any router/network configuration")
+    print(f" Works with any router/network configuration")
     print(f"\nPress Ctrl+C to stop the server")
     
     try:
