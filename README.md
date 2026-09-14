@@ -151,11 +151,9 @@ node minimal_server.js
 **Option 2: Python Server**
 ```bash
 cd Frontend
-python server.py
+python optimized_server.py
 ```
 
-**Option 3: VS Code Live Server**
-- Right-click on `index.html` and select "Open with Live Server"
 
 The backend will start on `http://localhost:3000` and frontend on `http://localhost:8080`.
 
